@@ -1,0 +1,27 @@
+# Node Dependencies
+node_modules/
+package-lock.json
+
+# Electron / Distribution Build Output
+dist/
+build/
+
+# Puppeteer / Browser Cache
+.cache/
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Output Renders & Local Test Files
+C:\MotionStudioRenders/
+renders/
+output/

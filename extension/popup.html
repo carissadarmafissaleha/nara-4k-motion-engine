@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>NARA Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="ext-container">
+    <!-- Ambient Glow Orbs -->
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+
+    <!-- Header Bar -->
+    <header class="ext-header">
+      <div class="ext-brand">
+        <div class="clay-logo">N</div>
+        <div>
+          <div class="brand-line">
+            <h2>NARA</h2>
+            <span class="chip-companion">EXTENSION</span>
+          </div>
+          <p class="ext-sub">Instant Web Animation Viewer & Downloader</p>
+        </div>
+      </div>
+      <div class="ext-header-actions">
+        <button id="btnExtThemeToggle" class="neu-theme-toggle-mini" title="Toggle Dark / Light Mode">
+          <span class="icon-moon">🌙</span>
+          <span class="icon-sun">☀️</span>
+        </button>
+        <div class="ext-status-pill">60 FPS 4K</div>
+      </div>
+    </header>
+
+    <!-- Source Quick Bar -->
+    <div class="ext-source-bar">
+      <button id="btnInspectTab" class="clay-btn-sm" title="Ambil kode animasi dari tab browser saat ini">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        Inspect Tab
+      </button>
+
+      <button id="btnToggleEditor" class="clay-btn-sm" title="Buka editor untuk paste/tulis kode">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        Edit Code
+      </button>
+
+      <div class="preset-dropdown-wrap">
+        <select id="selectPreset" class="clay-select-sm" title="Pilih preset animasi NARA">
+          <option value="">⚡ Presets NARA...</option>
+          <option value="kinetic-typography">1. Kinetic Typography</option>
+          <option value="particle-fx">2. Particle FX</option>
+          <option value="isometric-3d">3. Isometric 3D</option>
+          <option value="data-visualization">4. Data Visualization</option>
+          <option value="abstract-motion">5. Abstract Motion</option>
+          <option value="flat-animation">6. Flat Animation</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Code Editor Drawer (Collapsible) -->
+    <div id="codeDrawer" class="code-drawer" style="display: none;">
+      <div class="drawer-header">
+        <span>Paste atau edit HTML/SVG/Canvas code:</span>
+        <button id="btnCloseDrawer" class="btn-close-sm">✕</button>
+      </div>
+      <textarea id="codeEditorInput" class="code-editor-area" placeholder="<!DOCTYPE html><html><body>...</body></html>"></textarea>
+      <div class="drawer-actions">
+        <button id="btnRenderCode" class="clay-btn-primary-sm">⚡ Render Code Sekarang</button>
+      </div>
+    </div>
+
+    <!-- Preview Stage Container -->
+    <div class="stage-container">
+      <div class="stage-header">
+        <div class="alpha-switcher">
+          <button class="alpha-btn active" data-bg="checkerboard" title="Transparency Grid">Grid</button>
+          <button class="alpha-btn" data-bg="dark" title="Dark Background">Dark</button>
+          <button class="alpha-btn" data-bg="light" title="Light Background">Light</button>
+          <button class="alpha-btn" data-bg="green" title="Green Screen Background">Green</button>
+        </div>
+        <span class="res-badge" id="resBadgeText">3840×2160 (16:9)</span>
+      </div>
+
+      <div class="viewport-box checkerboard" id="viewportBox">
+        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin" title="NARA Preview"></iframe>
+        <div id="emptyNotice" class="empty-notice">
+          <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <p>Pilih preset NARA di atas, inspect tab, atau paste kode untuk live preview 60 FPS!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scrubber & Playback Controls -->
+    <div class="playback-bar">
+      <div class="scrub-row">
+        <span id="timecodeText" class="time-text">0 / 180 F</span>
+        <input type="range" id="frameSlider" min="0" max="179" value="0" class="clay-slider" disabled>
+      </div>
+      <div class="control-row">
+        <div class="ctl-btns">
+          <button id="btnRestart" class="ctl-btn" title="Restart" disabled>⏮</button>
+          <button id="btnPlayPause" class="ctl-btn ctl-play" title="Play/Pause" disabled>▶</button>
+        </div>
+        <div class="action-btns">
+          <button id="btnDownloadHtml" class="clay-btn-primary" title="Download standalone .html animation file">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download .HTML
+          </button>
+          <button id="btnCopyCode" class="clay-btn-secondary" title="Copy code ke clipboard">
+            📋 Copy
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toastMessage" class="toast-msg"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

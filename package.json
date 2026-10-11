@@ -1,0 +1,53 @@
+{
+  "name": "nara-motion-studio",
+  "version": "1.0.0",
+  "description": "NARA - Commercial 4K & ProRes 4444 Alpha Offline Video Renderer for Web Animations",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:portable": "electron-builder --win portable",
+    "test": "echo \"Ready to start\""
+  },
+  "build": {
+    "appId": "com.naramotion.studio",
+    "productName": "NARA",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable",
+      "icon": "extension/icons/icon128.png"
+    },
+    "portable": {
+      "artifactName": "NARA-Portable-${version}.${ext}"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/ffmpeg-static/**"
+    ]
+  },
+  "keywords": [
+    "motion-graphics",
+    "prores-4444",
+    "alpha-channel",
+    "microstock",
+    "adobe-stock",
+    "shutterstock",
+    "puppeteer",
+    "ffmpeg",
+    "electron"
+  ],
+  "author": "Motion Studio Team",
+  "license": "MIT",
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "puppeteer": "^24.4.0"
+  },
+  "devDependencies": {
+    "electron": "^35.1.2"
+  }
+}

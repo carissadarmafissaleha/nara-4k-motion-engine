@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NARA - Motion Studio Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Ambient Glassmorphism Glow Orbs Background -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <!-- Top Header Bar -->
+    <header class="app-header glass-card">
+      <div class="brand">
+        <div class="brand-icon clay-badge">
+          <span class="brand-nara-logo">N</span>
+        </div>
+        <div>
+          <div class="brand-title-wrap">
+            <h1 class="brand-title" data-i18n="appTitle">NARA</h1>
+            <span class="brand-chip">STUDIO</span>
+          </div>
+          <span class="brand-subtitle" data-i18n="appSubtitle">Commercial 4K & ProRes 4444 Motion Studio</span>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <!-- Language Switcher (Short Codes) -->
+        <div class="lang-selector-wrap" title="Change Language">
+          <span class="lang-icon">🌐</span>
+          <select id="selectAppLanguage" class="lang-select">
+            <option value="en" selected>EN</option>
+            <option value="id">ID</option>
+            <option value="ja">JA</option>
+            <option value="zh">ZH</option>
+            <option value="es">ES</option>
+            <option value="de">DE</option>
+            <option value="fr">FR</option>
+            <option value="pt">PT</option>
+            <option value="ru">RU</option>
+            <option value="ko">KO</option>
+          </select>
+        </div>
+
+        <!-- Dark / Light Theme Toggle (Icon Only) -->
+        <button id="btnThemeToggle" class="neu-theme-toggle is-dark" title="Toggle Theme (Dark / Light)" aria-label="Toggle Theme">
+          <svg class="theme-icon icon-sun" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon icon-moon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- Notification Sound Toggle (Icon Only) -->
+        <button id="btnSoundToggle" class="btn-sound-toggle is-enabled" title="Sound Notification" aria-label="Toggle Notification Sound">
+          <svg class="sound-icon icon-sound-on" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+          <svg class="sound-icon icon-sound-off" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+
+        <span class="engine-badge live-badge" data-i18n="badgeStreamActive">Headless Stream Active</span>
+        <span class="engine-badge prores-badge" data-i18n="badgeProresReady">4444</span>
+
+        <!-- Render Action Buttons in Header -->
+        <button id="btnStartRender" class="btn-start header-render-btn" disabled title="Start Batch Render">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span data-i18n="btnStartRender">Start Batch Render</span>
+        </button>
+        <button id="btnCancelRender" class="btn-cancel header-cancel-btn" style="display: none;" title="Cancel Rendering">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <rect x="6" y="6" width="12" height="12"></rect>
+          </svg>
+          <span data-i18n="btnCancelRender">Batalkan Render</span>
+        </button>
+
+        <button id="btnOpenOutputDir" class="btn-secondary" title="Open Output Directory">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span data-i18n="btnOpenFolder">Buka Folder Hasil</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Split View -->
+    <main class="workspace-grid">
+      <!-- Left Panel: Live Preview Player & Inspection -->
+      <section class="panel preview-panel" id="previewPanelSection">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <h2 data-i18n="previewHeader">Live Preview</h2>
+          </div>
+          <div class="preview-header-actions">
+            <!-- Alpha Inspection Mode Toggles -->
+            <div class="alpha-toggle-group" id="alphaToggleGroup">
+              <span class="toggle-label" data-i18n="alphaModeLabel">Alpha:</span>
+              <button class="toggle-btn active" data-bg="checkerboard" title="Transparency Checkerboard">
+                <span class="checkerboard-icon"></span> <span data-i18n="alphaGrid">Grid</span>
+              </button>
+              <button class="toggle-btn" data-bg="dark" title="Dark Solid Background">
+                <span class="color-dot dot-dark"></span> <span data-i18n="alphaDark">Dark</span>
+              </button>
+              <button class="toggle-btn" data-bg="light" title="Light Solid Background">
+                <span class="color-dot dot-light"></span> <span data-i18n="alphaLight">Light</span>
+              </button>
+              <button class="toggle-btn" data-bg="green" title="Green Screen Background (Chroma Key)">
+                <span class="color-dot dot-green"></span> <span data-i18n="alphaGreen">Green</span>
+              </button>
+            </div>
+            <!-- Fullscreen Preview Button -->
+            <button id="btnFullscreenPreview" class="btn-control btn-fullscreen" title="Fullscreen Preview (F / ESC)">
+              <svg id="iconEnterFullscreen" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              </svg>
+              <svg id="iconExitFullscreen" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Preview Viewport Container with Exact Aspect Ratio Scaling -->
+        <div class="preview-stage-container" id="previewStageContainer">
+          <button id="btnExitFloatingFullscreen" class="floating-fullscreen-exit" title="Exit Fullscreen (ESC)" style="display:none;">✕</button>
+          <div class="preview-aspect-box" id="previewAspectBox">
+            <div class="preview-viewport checkerboard" id="previewViewport">
+              <!-- Sandbox Iframe for HTML Animation -->
+              <iframe id="previewIframe" sandbox="allow-scripts allow-same-origin" title="Web Animation Preview"></iframe>
+              <div class="preview-overlay-info" id="previewResolutionTag">3840x2160 (16:9) | 60 FPS</div>
+              <div class="preview-placeholder" id="previewPlaceholder">
+                <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <p data-i18n="previewPlaceholderText">Pilih atau drop file animasi HTML untuk live preview & scrubbing</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Playback Scrubbing Bar & Controls -->
+        <div class="playback-dock">
+          <div class="scrubber-row">
+            <span class="time-display" id="currentTimecode">Frame: 0</span>
+            <div class="scrubber-track-wrap">
+              <input type="range" id="frameScrubber" min="0" max="179" value="0" step="1" class="scrubber-slider" disabled>
+              <div class="hold-indicator-zone" id="holdIndicatorZone" style="display:none;" title="Hold Last Frame Zone"></div>
+            </div>
+            <span class="time-display" id="totalTimecode">Total: 180 F</span>
+          </div>
+
+          <div class="controls-row">
+            <div class="btn-group">
+              <button id="btnRestart" class="btn-control" title="Restart to Frame 0" disabled>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                  <line x1="5" y1="19" x2="5" y2="5"></line>
+                </svg>
+              </button>
+              <button id="btnStepPrev" class="btn-control" title="Step Back 1 Frame" disabled>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="15 18 9 12 15 6 15 18"></polygon>
+                </svg>
+              </button>
+              <button id="btnPlayPause" class="btn-control btn-primary-control" title="Play / Pause" disabled>
+                <svg id="iconPlay" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <svg id="iconPause" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="display:none;">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+              </button>
+              <button id="btnStepNext" class="btn-control" title="Step Forward 1 Frame" disabled>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="9 18 15 12 9 6 9 18"></polygon>
+                </svg>
+              </button>
+            </div>
+
+            <div class="preview-fps-indicator">
+              <span class="status-indicator-dot" id="playbackDot"></span>
+              <span id="previewFpsText">60 FPS Preview</span>
+              <span class="preview-mode-tag" id="previewModeTag">[LOOP]</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Per-Video Metadata Interactive Editor Card -->
+        <div class="metadata-card" id="metadataCard">
+          <div class="meta-card-header">
+            <div class="meta-title-row">
+              <span class="meta-tag badge-loop" id="metaTypeBadge">Loop Ready</span>
+              <h3 id="metaActiveFileTitle" data-i18n="metaEditorHeading">Metadata Editor (Per-Video)</h3>
+            </div>
+            <span class="meta-sync-hint" data-i18n="metaAutoSaved">Tersimpan otomatis per video</span>
+          </div>
+
+          <div class="meta-editor-form">
+            <!-- Title -->
+            <div class="meta-field-group">
+              <label for="metaTitleInput" data-i18n="metaTitleLabel">Judul Komersial (Title):</label>
+              <input type="text" id="metaTitleInput" class="form-input" placeholder="e.g. Cyberpunk Neon Portal Loop">
+            </div>
+
+            <!-- Category & Frames Row -->
+            <div class="meta-fields-two-col">
+              <div class="meta-field-group">
+                <label for="metaCategoryInput" data-i18n="metaCategoryLabel">Kategori (Category):</label>
+                <input type="text" id="metaCategoryInput" class="form-input" placeholder="e.g. Motion Graphics & Backgrounds">
+              </div>
+
+              <!-- Total Frames Input -->
+              <div class="meta-field-group">
+                <label for="metaFramesInput" data-i18n="metaFramesLabel">Total Frames:</label>
+                <div class="input-with-suffix">
+                  <input type="number" id="metaFramesInput" class="form-input" min="5" max="7200" value="180">
+                  <span class="suffix">F</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Keywords -->
+            <div class="meta-field-group">
+              <label for="metaKeywordsInput" data-i18n="metaKeywordsLabel">Kata Kunci Microstock (Pisahkan dengan koma):</label>
+              <textarea id="metaKeywordsInput" class="form-textarea" rows="2" placeholder="loop, seamless, background, 4k, neon, futuristic"></textarea>
+            </div>
+
+            <!-- Per-Video Animation Mode (Seamless vs One-Shot) -->
+            <div class="meta-mode-box">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="metaChkLoop" checked>
+                <span class="checkmark"></span>
+                <span class="checkbox-label-text">
+                  <strong data-i18n="chkSeamlessLoopTitle">Seamless Looping Animation</strong>
+                  <small data-i18n="chkSeamlessLoopDesc">Render frame 0 s/d (Total-1) mencegah micro-freeze pada sambungan loop</small>
+                </span>
+              </label>
+
+              <div class="hold-frame-inline" id="metaHoldFrameContainer" style="display:none;">
+                <label for="metaHoldFrameInput" data-i18n="holdFrameLabel">Hold Last Frame:</label>
+                <div class="hold-input-wrap">
+                  <input type="number" id="metaHoldFrameInput" class="form-input" value="30" min="0" max="600">
+                  <span class="unit-text" data-i18n="unitFrames">frames</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Pre-Render Controls & Batch Queue -->
+      <section class="panel queue-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <h2 data-i18n="queueHeader">Batch Queue & Engine Controls</h2>
+          </div>
+          <div class="queue-counter" id="queueSummaryBadge">0 File</div>
+        </div>
+
+        <div class="panel-mode-tabs">
+          <button id="tabQueueMode" class="tab-btn active">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <span data-i18n="tabQueueTitle">Batch Render Queue</span>
+          </button>
+          <button id="tabStudioMode" class="tab-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span data-i18n="tabStudioTitle">Studio Generator ✨</span>
+          </button>
+        </div>
+
+        <!-- Tab View: Queue Mode -->
+        <div id="viewQueueContainer" class="tab-view-content active">
+        <!-- Drag & Drop Zone -->
+        <div class="drop-zone" id="dropZone">
+          <div class="drop-zone-content">
+            <div class="upload-icon-wrapper">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <div class="drop-text">
+              <span class="drop-primary" data-i18n="dropPrimary">Drag & Drop file animasi .HTML ke sini</span>
+              <span class="drop-secondary" data-i18n="dropSecondary">atau pilih lewat tombol di bawah</span>
+            </div>
+            <div class="drop-buttons">
+              <button id="btnBrowseFiles" class="btn-action">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <span data-i18n="btnBrowseFiles">Pilih File HTML</span>
+              </button>
+              <button id="btnBrowseFolder" class="btn-action-alt">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span data-i18n="btnBrowseFolder">Scan Folder</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Global Pre-Render Configuration Settings -->
+        <div class="settings-card">
+          <h4 class="card-subtitle" data-i18n="exportSettingsHeading">Konfigurasi Ekspor Global</h4>
+          
+          <div class="settings-grid">
+            <!-- Format Preset -->
+            <div class="form-group">
+              <label for="selectPreset" data-i18n="labelPreset">Preset Format & Codec</label>
+              <select id="selectPreset" class="form-select">
+                <option value="prores4444" selected data-i18n="presetProres">MOV ProRes 4444 (Alpha Transparan)</option>
+                <option value="mp4_4k" data-i18n="presetMp44k">MP4 High Bitrate 4K (CRF 15 / yuv420p)</option>
+                <option value="mp4_sosmed" data-i18n="presetMp4Sosmed">MP4 Sosmed 1080p (CRF 20 / yuv420p)</option>
+              </select>
+            </div>
+
+            <!-- Resolution -->
+            <div class="form-group">
+              <label for="selectResolution" data-i18n="labelResolution">Resolusi Render</label>
+              <select id="selectResolution" class="form-select">
+                <option value="3840x2160" selected>3840 x 2160 (4K UHD Commercial)</option>
+                <option value="1920x1080">1920 x 1080 (Full HD 16:9)</option>
+                <option value="1080x1920">1080 x 1920 (Vertical 9:16)</option>
+                <option value="1080x1080">1080 x 1080 (Square 1:1)</option>
+              </select>
+            </div>
+
+            <!-- Frame Rate -->
+            <div class="form-group">
+              <label for="selectFps" data-i18n="labelFps">Frame Rate (FPS)</label>
+              <select id="selectFps" class="form-select">
+                <option value="60" selected data-i18n="fps60">60 FPS (Ultra Smooth Stock)</option>
+                <option value="30" data-i18n="fps30">30 FPS (Standard Stock)</option>
+                <option value="24" data-i18n="fps24">24 FPS (Cinematic 24p)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Output Directory Path Selector -->
+          <div class="output-path-row">
+            <div class="path-display-wrap">
+              <span class="path-label" data-i18n="labelOutputDir">Folder Hasil:</span>
+              <span class="path-value" id="outputDirPath" title="Target Render Folder">Loading...</span>
+            </div>
+            <button id="btnChangeOutputDir" class="btn-inline" data-i18n="btnChangeOutputDir">Ganti Folder</button>
+          </div>
+        </div>
+
+        <!-- Batch Queue Items Container -->
+        <div class="queue-list-container">
+          <div class="queue-list-header">
+            <h4 data-i18n="queueListHeading">Daftar Antrean Render</h4>
+            <div class="queue-actions-top">
+              <button id="btnApplyDefaultsToAll" class="btn-text-subtle" title="Terapkan Preset, Resolusi & FPS Global ke Semua File" data-i18n="btnApplyDefaults">Terapkan Default ke Semua</button>
+              <button id="btnClearQueue" class="btn-clear-all" title="Hapus semua video dari antrean">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span data-i18n="btnClearQueue">Hapus Semua</span>
+              </button>
+            </div>
+          </div>
+          <div class="queue-items-scroll" id="queueItemsList">
+            <div class="empty-queue-message">
+              <span data-i18n="queueEmptyText">Belum ada file di antrean. Seret file HTML atau gunakan tombol di atas.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Render Execution Bar -->
+        <div class="execution-bar">
+          <div class="overall-progress-box">
+            <div class="progress-info-row">
+              <span id="batchProgressText" data-i18n="progressReady">Siap untuk render</span>
+              <span id="batchPercentText">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="batchProgressBar" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+        </div> <!-- End of #viewQueueContainer -->
+
+        <!-- Tab View: Studio Generator Mode -->
+        <div id="viewStudioContainer" class="tab-view-content studio-panel-view" style="display: none;">
+          <div class="studio-intro-banner">
+            <div class="studio-badge-pill" data-i18n="studioBadge">PREMIUM 4K MOTION TEMPLATES</div>
+            <h3 data-i18n="studioTitle">Motion Graphics Studio Generator</h3>
+            <p data-i18n="studioSubtitle">Pilih kategori gerak komersial, sesuaikan parameter, lalu preview langsung atau kirim ke antrean render 4K / ProRes 4444 Alpha.</p>
+          </div>
+
+          <!-- Category Selection Cards -->
+          <div class="studio-category-section">
+            <label class="studio-section-label" data-i18n="studioSelectCategory">Pilih Gaya Animasi:</label>
+            <div class="studio-category-grid" id="studioCategoryGrid">
+              <!-- 1. Kinetic Typography -->
+              <div class="category-card active" data-category="kinetic-typography">
+                <div class="cat-icon-wrap">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                    <line x1="9" y1="20" x2="15" y2="20"></line>
+                    <line x1="12" y1="4" x2="12" y2="20"></line>
+                  </svg>
+                </div>
+                <div class="cat-details">
+                  <div class="cat-title" data-i18n="catKineticTitle">Kinetic Typography</div>
+                  <div class="cat-desc" data-i18n="catKineticDesc">Typo reveal staggered, neon pulse, crosshair telemetry</div>
+                </div>
+              </div>
+
+              <!-- 2. Particle FX -->
+              <div class="category-card" data-category="particle-fx">
+                <div class="cat-icon-wrap">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                  </svg>
+                </div>
+                <div class="cat-details">
+                  <div class="cat-title" data-i18n="catParticleTitle">Particle FX</div>
+                  <div class="cat-desc" data-i18n="catParticleDesc">Cosmic galaxy, quantum spark stream, bokeh swirl</div>
+                </div>
+              </div>
+
+              <!-- 3. Isometric 3D -->
+              <div class="category-card" data-category="isometric-3d">
+                <div class="cat-icon-wrap">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                    <path d="M2 17l10 5 10-5"></path>
+                    <path d="M2 12l10 5 10-5"></path>
+                  </svg>
+                </div>
+                <div class="cat-details">
+                  <div class="cat-title" data-i18n="catIsoTitle">Isometric 3D</div>
+                  <div class="cat-desc" data-i18n="catIsoDesc">2.5D geometric ripple matrix, depth shading & pillars</div>
+                </div>
+              </div>
+
+              <!-- 4. Data Visualization -->
+              <div class="category-card" data-category="data-visualization">
+                <div class="cat-icon-wrap">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                  </svg>
+                </div>
+                <div class="cat-details">
+                  <div class="cat-title" data-i18n="catDataVizTitle">Data Visualization</div>
+                  <div class="cat-desc" data-i18n="catDataVizDesc">FinTech HUD, radial gauge, animated bar chart & telemetry</div>
+                </div>
+              </div>
+
+              <!-- 5. Abstract Motion -->
+              <div class="category-card" data-category="abstract-motion">
+                <div class="cat-icon-wrap">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 12c4-8 8-8 12 0s8 8 8 0"></path>
+                    <path d="M2 16c4-8 8-8 12 0s8 8 8 0"></path>
+                  </svg>
+                </div>
+                <div class="cat-details">
+                  <div class="cat-title" data-i18n="catAbstractTitle">Abstract Motion</div>
+                  <div class="cat-desc" data-i18n="catAbstractDesc">Hypnotic fluid wave ribbons, iridescent liquid neon</div>
+                </div>
+              </div>
+
+              <!-- 6. Flat Animation -->
+              <div class="category-card" data-category="flat-animation">
+                <div class="cat-icon-wrap">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9 12l2 2 4-4"></path>
+                  </svg>
+                </div>
+                <div class="cat-details">
+                  <div class="cat-title" data-i18n="catFlatTitle">Flat Animation</div>
+                  <div class="cat-desc" data-i18n="catFlatDesc">Clean vector explainer, success badge, confetti burst</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Parameter Form Section -->
+          <div class="studio-params-card">
+            <div class="studio-params-header">
+              <span class="params-heading" id="studioCategoryLabelName">Kinetic Typography Parameters</span>
+              <span class="params-res-tag">3840×2160 UHD • 60 FPS</span>
+            </div>
+
+            <div class="studio-form-grid" id="studioDynamicFields">
+              <!-- Dynamically populated by app.js based on selected category -->
+            </div>
+
+            <!-- Common Parameters (Frames & Alpha) -->
+            <div class="studio-common-row">
+              <div class="meta-field-group">
+                <label for="studioFramesInput" data-i18n="metaFramesLabel">Total Frames:</label>
+                <div class="input-with-suffix">
+                  <input type="number" id="studioFramesInput" class="form-input" min="30" max="1800" value="180">
+                  <span class="suffix">F</span>
+                </div>
+              </div>
+              <div class="meta-field-group">
+                <label class="custom-checkbox studio-alpha-chk">
+                  <input type="checkbox" id="studioChkAlpha">
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label-text">
+                    <strong data-i18n="studioAlphaTitle">Transparent Alpha Background</strong>
+                    <small data-i18n="studioAlphaDesc">Cocok untuk ProRes 4444 Alpha Channel overlay</small>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Studio Action Buttons -->
+            <div class="studio-actions-row">
+              <button id="btnStudioPreview" class="btn-action-alt studio-btn-preview" title="Test & scrub in left preview">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span data-i18n="btnStudioPreview">Live Preview Sandbox</span>
+              </button>
+
+              <button id="btnStudioSaveHtml" class="btn-action-alt" title="Save standalone .html file to disk">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                <span data-i18n="btnStudioSaveHtml">Simpan File .HTML</span>
+              </button>
+
+              <button id="btnStudioGenerateQueue" class="btn-primary studio-btn-generate" title="Generate and queue for 4K video rendering">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <span data-i18n="btnStudioGenerateQueue">Generate & Masukkan ke Antrean</span>
+              </button>
+            </div>
+          </div>
+        </div> <!-- End of #viewStudioContainer -->
+
+        <!-- Mini Terminal Log Console -->
+        <div class="terminal-log-card">
+          <div class="terminal-header">
+            <div class="terminal-lights">
+              <span class="light red"></span>
+              <span class="light yellow"></span>
+              <span class="light green"></span>
+            </div>
+            <span class="terminal-title" data-i18n="terminalTitle">Render Stream & FFmpeg Logs</span>
+            <button id="btnClearLog" class="btn-tiny" data-i18n="btnClearLog">Clear</button>
+          </div>
+          <div class="terminal-body" id="terminalLogs">
+            <div class="log-line info">[System] Motion Studio Engine siap digunakan.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Studio Generator Modules -->
+  <script src="generators/kinetic-typography.js"></script>
+  <script src="generators/particle-fx.js"></script>
+  <script src="generators/isometric-3d.js"></script>
+  <script src="generators/data-visualization.js"></script>
+  <script src="generators/abstract-motion.js"></script>
+  <script src="generators/flat-animation.js"></script>
+  <script src="generators/index.js"></script>
+
+  <script src="app.js"></script>
+</body>
+</html>
