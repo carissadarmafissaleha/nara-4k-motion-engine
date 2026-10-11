@@ -743,10 +743,13 @@ body {
 }
 
 #previewIframe {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
   border: none;
   display: block;
+  transform-origin: center center;
+  pointer-events: auto;
 }
 
 .preview-overlay-info {

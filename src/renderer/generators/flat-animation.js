@@ -190,6 +190,10 @@ METADATA-->
 </html>`;
 }
 
+if (typeof window !== 'undefined') {
+  window.generateFlatAnimation = generateFlatAnimation;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { generateFlatAnimation };
 }

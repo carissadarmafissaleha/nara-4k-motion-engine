@@ -1279,6 +1279,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     previewAspectBox.style.height = `${targetH}px`;
     previewAspectBox.style.aspectRatio = `${w} / ${h}`;
 
+    // Fit and center preview iframe perfectly at native resolution with GPU scale transform
+    if (previewIframe) {
+      const scale = targetW / w;
+      previewIframe.style.width = `${w}px`;
+      previewIframe.style.height = `${h}px`;
+      previewIframe.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    }
+
     // Ratio label calculation
     let ratioLabel = `${w}:${h}`;
     if (Math.abs(aspect - 16 / 9) < 0.05) {
@@ -1588,23 +1596,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           // Override transparent styling matching headless Chrome
           const style = document.createElement('style');
-          style.innerHTML = 'html, body { background: transparent !important; background-color: transparent !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; width: 100% !important; height: 100% !important; } canvas, svg { max-width: 100% !important; max-height: 100% !important; width: 100% !important; height: 100% !important; object-fit: contain !important; display: block !important; margin: auto !important; }';
+          style.innerHTML = 'html, body { background: transparent !important; background-color: transparent !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; } canvas, svg { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }';
           document.head.appendChild(style);
 
           function fitStage() {
+            const curW = window.innerWidth;
+            const curH = window.innerHeight;
             const stage = document.getElementById('stage') || document.querySelector('.stage') || document.querySelector('.canvas-container');
             if (stage) {
               const origW = parseFloat(stage.dataset.width) || parseFloat(stage.style.width) || 3840;
               const origH = parseFloat(stage.dataset.height) || parseFloat(stage.style.height) || 2160;
               if (origW > 0 && origH > 0) {
-                const curW = window.innerWidth;
-                const curH = window.innerHeight;
                 const scale = Math.min(curW / origW, curH / origH);
-                stage.style.transformOrigin = '0 0';
-                stage.style.transform = 'scale(' + scale + ')';
                 stage.style.position = 'absolute';
-                stage.style.left = Math.max(0, (curW - origW * scale) / 2) + 'px';
-                stage.style.top = Math.max(0, (curH - origH * scale) / 2) + 'px';
+                stage.style.left = '50%';
+                stage.style.top = '50%';
+                stage.style.transformOrigin = 'center center';
+                stage.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+                stage.style.margin = '0';
+              }
+            } else {
+              const canvas = document.querySelector('canvas');
+              if (canvas) {
+                const origW = canvas.width || parseFloat(canvas.style.width) || 3840;
+                const origH = canvas.height || parseFloat(canvas.style.height) || 2160;
+                if (origW > 0 && origH > 0) {
+                  const scale = Math.min(curW / origW, curH / origH);
+                  canvas.style.position = 'absolute';
+                  canvas.style.left = '50%';
+                  canvas.style.top = '50%';
+                  canvas.style.transformOrigin = 'center center';
+                  canvas.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+                  canvas.style.margin = '0';
+                }
               }
             }
           }
@@ -1782,12 +1806,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnExitFloatingFullscreen) {
       btnExitFloatingFullscreen.style.display = isFullscreen ? 'flex' : 'none';
     }
-    if (state.activePreviewIndex >= 0) {
+    let curW = 3840;
+    let curH = 2160;
+    if (state.activePreviewIndex >= 0 && state.queue[state.activePreviewIndex]) {
       const item = state.queue[state.activePreviewIndex];
-      setTimeout(() => {
-        updatePreviewAspectRatio(item.metadata.width || 3840, item.metadata.height || 2160);
-      }, 60);
+      curW = item.metadata.width || 3840;
+      curH = item.metadata.height || 2160;
+    } else if (state.activeStudioItem) {
+      curW = state.activeStudioItem.metadata.width || 3840;
+      curH = state.activeStudioItem.metadata.height || 2160;
+    } else {
+      const [w, h] = selectResolution.value.split('x').map(Number);
+      curW = w || 3840;
+      curH = h || 2160;
     }
+    setTimeout(() => {
+      updatePreviewAspectRatio(curW, curH);
+    }, 60);
   }
 
   document.addEventListener('fullscreenchange', () => {
@@ -1852,7 +1887,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (state.queue.some(item => item.filePath === filePath)) continue;
 
       try {
-        const rawMeta = await window.api.parseMetadata(filePath);
+        let rawMeta;
+        if (window.api && typeof window.api.parseMetadata === 'function') {
+          rawMeta = await window.api.parseMetadata(filePath);
+        } else {
+          rawMeta = {
+            filePath,
+            filename: filePath.split(/[/\\]/).pop() || 'animation.html',
+            title: (filePath.split(/[/\\]/).pop() || 'animation.html').replace(/\.html?$/i, ''),
+            category: 'Motion Graphics & Backgrounds',
+            totalFrames: 180,
+            fps: globalFps,
+            loop: true,
+            holdLastFrames: 0,
+            width: defW,
+            height: defH
+          };
+        }
 
         const fps = rawMeta.fps || globalFps;
 
@@ -2527,8 +2578,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function getStudioCurrentParams() {
     const cat = studioSelectedCategory;
-    const p = studioParamsStore[cat] || {};
-    const totalFrames = parseInt(studioFramesInput.value, 10) || 180;
+    const p = { ...(studioParamsStore[cat] || {}) };
+
+    if (studioDynamicFields) {
+      studioDynamicFields.querySelectorAll('input, select, textarea').forEach((elem) => {
+        const fieldId = elem.id.replace('sf_', '');
+        let val = elem.value;
+        if (elem.type === 'number') val = Number(val);
+        p[fieldId] = val;
+      });
+    }
+
+    const totalFrames = parseInt(studioFramesInput ? studioFramesInput.value : 180, 10) || 180;
     const isTransparent = Boolean(studioChkAlpha && studioChkAlpha.checked);
 
     return {
@@ -2576,23 +2637,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           };
           const style = document.createElement('style');
-          style.innerHTML = 'html, body { background: transparent !important; background-color: transparent !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; width: 100% !important; height: 100% !important; } canvas, svg { max-width: 100% !important; max-height: 100% !important; width: 100% !important; height: 100% !important; object-fit: contain !important; display: block !important; margin: auto !important; }';
+          style.innerHTML = 'html, body { background: transparent !important; background-color: transparent !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; } canvas, svg { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }';
           document.head.appendChild(style);
 
           function fitStage() {
+            const curW = window.innerWidth;
+            const curH = window.innerHeight;
             const stage = document.getElementById('stage') || document.querySelector('.stage') || document.querySelector('.canvas-container');
             if (stage) {
               const origW = parseFloat(stage.dataset.width) || parseFloat(stage.style.width) || 3840;
               const origH = parseFloat(stage.dataset.height) || parseFloat(stage.style.height) || 2160;
               if (origW > 0 && origH > 0) {
-                const curW = window.innerWidth;
-                const curH = window.innerHeight;
                 const scale = Math.min(curW / origW, curH / origH);
-                stage.style.transformOrigin = '0 0';
-                stage.style.transform = 'scale(' + scale + ')';
                 stage.style.position = 'absolute';
-                stage.style.left = Math.max(0, (curW - origW * scale) / 2) + 'px';
-                stage.style.top = Math.max(0, (curH - origH * scale) / 2) + 'px';
+                stage.style.left = '50%';
+                stage.style.top = '50%';
+                stage.style.transformOrigin = 'center center';
+                stage.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+                stage.style.margin = '0';
+              }
+            } else {
+              const canvas = document.querySelector('canvas');
+              if (canvas) {
+                const origW = canvas.width || parseFloat(canvas.style.width) || 3840;
+                const origH = canvas.height || parseFloat(canvas.style.height) || 2160;
+                if (origW > 0 && origH > 0) {
+                  const scale = Math.min(curW / origW, curH / origH);
+                  canvas.style.position = 'absolute';
+                  canvas.style.left = '50%';
+                  canvas.style.top = '50%';
+                  canvas.style.transformOrigin = 'center center';
+                  canvas.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+                  canvas.style.margin = '0';
+                }
               }
             }
           }
@@ -2725,32 +2802,53 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Generate & Add to Render Queue Button
   if (btnStudioGenerateQueue) {
     btnStudioGenerateQueue.addEventListener('click', async () => {
-      if (!window.GeneratorCatalog) return;
-      const params = getStudioCurrentParams();
-      const htmlContent = window.GeneratorCatalog.generate(studioSelectedCategory, params);
-      const safePrefix = studioSelectedCategory.replace(/[^a-z0-9_-]/gi, '_');
-      const filename = `${safePrefix}_${Date.now()}.html`;
-
-      btnStudioGenerateQueue.disabled = true;
       try {
-        const saveRes = await window.api.saveGeneratedAnimation({ filename, content: htmlContent });
-        if (!saveRes.success) {
-          addTerminalLog(`[Studio Error] Failed to save animation: ${saveRes.error}`, 'error');
+        if (!window.GeneratorCatalog) {
+          addTerminalLog('[Studio Error] GeneratorCatalog belum siap dimuat.', 'error');
+          return;
+        }
+        const params = getStudioCurrentParams();
+        const htmlContent = window.GeneratorCatalog.generate(studioSelectedCategory, params);
+        if (!htmlContent || htmlContent.length < 50) {
+          addTerminalLog('[Studio Error] Gagal membuat konten template animasi.', 'error');
           return;
         }
 
+        const safePrefix = studioSelectedCategory.replace(/[^a-z0-9_-]/gi, '_');
+        const filename = `${safePrefix}_${Date.now()}.html`;
+
+        btnStudioGenerateQueue.disabled = true;
+
+        let targetFilePath = '';
+
+        if (window.api && typeof window.api.saveGeneratedAnimation === 'function') {
+          const saveRes = await window.api.saveGeneratedAnimation({ filename, content: htmlContent });
+          if (!saveRes || !saveRes.success) {
+            addTerminalLog(`[Studio Error] Gagal menyimpan file animasi: ${(saveRes && saveRes.error) || 'Unknown error'}`, 'error');
+            btnStudioGenerateQueue.disabled = false;
+            return;
+          }
+          targetFilePath = saveRes.filePath;
+        } else {
+          // Fallback if running outside Electron
+          const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+          targetFilePath = URL.createObjectURL(blob);
+        }
+
         // Add saved file to queue
-        await addFilesToQueue([saveRes.filePath]);
+        await addFilesToQueue([targetFilePath]);
 
         // Switch to Queue tab
-        if (tabQueueMode) tabQueueMode.click();
+        if (tabQueueMode) {
+          tabQueueMode.click();
+        }
 
         // Select the newly generated item
         if (state.queue.length > 0) {
           loadPreviewFile(state.queue.length - 1);
         }
 
-        addTerminalLog(`${t('logStudioGenerated')} ${saveRes.filename}`, 'success');
+        addTerminalLog(`${t('logStudioGenerated')} ${filename}`, 'success');
       } catch (err) {
         addTerminalLog(`[Studio Error] ${err.message}`, 'error');
       } finally {
@@ -2762,18 +2860,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Save Standalone HTML File Button
   if (btnStudioSaveHtml) {
     btnStudioSaveHtml.addEventListener('click', async () => {
-      if (!window.GeneratorCatalog) return;
-      const params = getStudioCurrentParams();
-      const htmlContent = window.GeneratorCatalog.generate(studioSelectedCategory, params);
-      const defaultFilename = `${studioSelectedCategory}_motion.html`;
+      try {
+        if (!window.GeneratorCatalog) {
+          addTerminalLog('[Studio Error] GeneratorCatalog belum siap dimuat.', 'error');
+          return;
+        }
+        const params = getStudioCurrentParams();
+        const htmlContent = window.GeneratorCatalog.generate(studioSelectedCategory, params);
+        if (!htmlContent || htmlContent.length < 50) {
+          addTerminalLog('[Studio Error] Gagal membuat konten template animasi.', 'error');
+          return;
+        }
 
-      const res = await window.api.saveHtmlWithDialog({
-        defaultFilename,
-        content: htmlContent
-      });
+        const defaultFilename = `${studioSelectedCategory}_motion.html`;
 
-      if (res && res.success) {
-        addTerminalLog(`${t('logStudioSaved')} ${res.filePath}`, 'success');
+        // If Electron API is available, try Save Dialog
+        if (window.api && typeof window.api.saveHtmlWithDialog === 'function') {
+          const res = await window.api.saveHtmlWithDialog({
+            defaultFilename,
+            content: htmlContent
+          });
+
+          if (res && res.success) {
+            addTerminalLog(`${t('logStudioSaved')} ${res.filePath}`, 'success');
+            return;
+          } else if (res && res.canceled) {
+            addTerminalLog('[Studio] Penyimpanan HTML dibatalkan.', 'info');
+            return;
+          } else if (res && res.error) {
+            addTerminalLog(`[Studio Error] Dialog gagal: ${res.error}`, 'error');
+          }
+        }
+
+        // Reliable Fallback: Browser Blob download
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = defaultFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        addTerminalLog(`${t('logStudioSaved')} ${defaultFilename} (Download Otomatis)`, 'success');
+      } catch (err) {
+        addTerminalLog(`[Studio Error] Gagal menyimpan HTML: ${err.message}`, 'error');
       }
     });
   }

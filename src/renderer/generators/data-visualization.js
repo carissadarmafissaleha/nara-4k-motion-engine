@@ -214,6 +214,10 @@ METADATA-->
 </html>`;
 }
 
+if (typeof window !== 'undefined') {
+  window.generateDataVisualization = generateDataVisualization;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { generateDataVisualization };
 }

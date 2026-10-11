@@ -2,12 +2,17 @@
  * Motion Studio Engine - Master Generator Registry
  */
 
-const { generateKineticTypography } = require('./kinetic-typography');
-const { generateParticleFX } = require('./particle-fx');
-const { generateIsometric3D } = require('./isometric-3d');
-const { generateDataVisualization } = require('./data-visualization');
-const { generateAbstractMotion } = require('./abstract-motion');
-const { generateFlatAnimation } = require('./flat-animation');
+function resolveGenerator(id) {
+  const map = {
+    'kinetic-typography': (typeof window !== 'undefined' && window.generateKineticTypography) || (typeof generateKineticTypography === 'function' ? generateKineticTypography : null) || (typeof require === 'function' ? require('./kinetic-typography').generateKineticTypography : null),
+    'particle-fx': (typeof window !== 'undefined' && window.generateParticleFX) || (typeof generateParticleFX === 'function' ? generateParticleFX : null) || (typeof require === 'function' ? require('./particle-fx').generateParticleFX : null),
+    'isometric-3d': (typeof window !== 'undefined' && window.generateIsometric3D) || (typeof generateIsometric3D === 'function' ? generateIsometric3D : null) || (typeof require === 'function' ? require('./isometric-3d').generateIsometric3D : null),
+    'data-visualization': (typeof window !== 'undefined' && window.generateDataVisualization) || (typeof generateDataVisualization === 'function' ? generateDataVisualization : null) || (typeof require === 'function' ? require('./data-visualization').generateDataVisualization : null),
+    'abstract-motion': (typeof window !== 'undefined' && window.generateAbstractMotion) || (typeof generateAbstractMotion === 'function' ? generateAbstractMotion : null) || (typeof require === 'function' ? require('./abstract-motion').generateAbstractMotion : null),
+    'flat-animation': (typeof window !== 'undefined' && window.generateFlatAnimation) || (typeof generateFlatAnimation === 'function' ? generateFlatAnimation : null) || (typeof require === 'function' ? require('./flat-animation').generateFlatAnimation : null)
+  };
+  return map[id] || null;
+}
 
 const GeneratorCatalog = {
   'kinetic-typography': {
@@ -25,7 +30,7 @@ const GeneratorCatalog = {
       totalFrames: 180,
       isTransparent: false
     },
-    generate: generateKineticTypography
+    generate: (opts) => GeneratorCatalog.generate('kinetic-typography', opts)
   },
   'particle-fx': {
     id: 'particle-fx',
@@ -41,7 +46,7 @@ const GeneratorCatalog = {
       totalFrames: 180,
       isTransparent: true
     },
-    generate: generateParticleFX
+    generate: (opts) => GeneratorCatalog.generate('particle-fx', opts)
   },
   'isometric-3d': {
     id: 'isometric-3d',
@@ -56,7 +61,7 @@ const GeneratorCatalog = {
       totalFrames: 180,
       isTransparent: false
     },
-    generate: generateIsometric3D
+    generate: (opts) => GeneratorCatalog.generate('isometric-3d', opts)
   },
   'data-visualization': {
     id: 'data-visualization',
@@ -72,7 +77,7 @@ const GeneratorCatalog = {
       totalFrames: 180,
       isTransparent: false
     },
-    generate: generateDataVisualization
+    generate: (opts) => GeneratorCatalog.generate('data-visualization', opts)
   },
   'abstract-motion': {
     id: 'abstract-motion',
@@ -91,7 +96,7 @@ const GeneratorCatalog = {
       totalFrames: 180,
       isTransparent: false
     },
-    generate: generateAbstractMotion
+    generate: (opts) => GeneratorCatalog.generate('abstract-motion', opts)
   },
   'flat-animation': {
     id: 'flat-animation',
@@ -107,17 +112,17 @@ const GeneratorCatalog = {
       totalFrames: 180,
       isTransparent: true
     },
-    generate: generateFlatAnimation
+    generate: (opts) => GeneratorCatalog.generate('flat-animation', opts)
   }
 };
 
 // Convenience API methods
 GeneratorCatalog.generate = function(id, options) {
-  const item = GeneratorCatalog[id];
-  if (!item || typeof item.generate !== 'function') {
-    throw new Error(`Unknown generator category: "${id}"`);
+  const genFunc = resolveGenerator(id);
+  if (typeof genFunc !== 'function') {
+    throw new Error(`Generator function for category "${id}" is not available`);
   }
-  return item.generate(options);
+  return genFunc(options);
 };
 
 GeneratorCatalog.getDefaultParams = function(id) {

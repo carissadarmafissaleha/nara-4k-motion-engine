@@ -206,6 +206,10 @@ METADATA-->
 </html>`;
 }
 
+if (typeof window !== 'undefined') {
+  window.generateParticleFX = generateParticleFX;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { generateParticleFX };
 }

@@ -148,17 +148,25 @@ ipcMain.handle('file:readHtmlContent', async (event, filePath) => {
 // IPC Handler: Save Generated Animation directly
 ipcMain.handle('file:saveGeneratedAnimation', async (event, { filename, content }) => {
   try {
-    const outputDir = path.join(process.cwd(), 'generated_animations');
-    if (!fs.existsSync(outputDir)) {
-      await fs.promises.mkdir(outputDir, { recursive: true });
+    let outputDir;
+    try {
+      outputDir = path.join(process.cwd(), 'generated_animations');
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+      }
+    } catch (errDir) {
+      outputDir = path.join(app.getPath('userData'), 'generated_animations');
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+      }
     }
-    const safeName = (filename || 'motion-animation')
-      .replace(/[^a-zA-Z0-9_-]/g, '_')
-      .toLowerCase();
-    const finalFilename = safeName.endsWith('.html') ? safeName : `${safeName}.html`;
+
+    let cleanName = path.basename(filename || 'motion-animation', path.extname(filename || ''));
+    cleanName = cleanName.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+    const finalFilename = `${cleanName}.html`;
     const targetPath = path.join(outputDir, finalFilename);
-    await fs.promises.writeFile(targetPath, content, 'utf-8');
-    return { success: true, filePath: targetPath };
+    await fs.promises.writeFile(targetPath, content || '', 'utf-8');
+    return { success: true, filePath: targetPath, filename: finalFilename };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -166,19 +174,25 @@ ipcMain.handle('file:saveGeneratedAnimation', async (event, { filename, content 
 
 // IPC Handler: Save HTML with Dialog
 ipcMain.handle('dialog:saveHtmlFile', async (event, { defaultFilename, content }) => {
-  if (!mainWindow) return { success: false, canceled: true };
-  const result = await dialog.showSaveDialog(mainWindow, {
-    title: 'Save Generated Animation HTML',
-    defaultPath: defaultFilename || 'generated-animation.html',
-    filters: [
-      { name: 'HTML Web Animation', extensions: ['html', 'htm'] }
-    ]
-  });
-  if (result.canceled || !result.filePath) {
-    return { success: false, canceled: true };
-  }
   try {
-    await fs.promises.writeFile(result.filePath, content, 'utf-8');
+    const win = BrowserWindow.fromWebContents(event.sender) || ((mainWindow && !mainWindow.isDestroyed()) ? mainWindow : null);
+    let defaultPath = defaultFilename || 'motion-animation.html';
+    try {
+      defaultPath = path.join(app.getPath('downloads'), defaultFilename || 'motion-animation.html');
+    } catch (e) {}
+
+    const result = await dialog.showSaveDialog(win, {
+      title: 'Save Generated Animation HTML',
+      defaultPath,
+      filters: [
+        { name: 'HTML Web Animation', extensions: ['html', 'htm'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    if (result.canceled || !result.filePath) {
+      return { success: false, canceled: true };
+    }
+    await fs.promises.writeFile(result.filePath, content || '', 'utf-8');
     return { success: true, filePath: result.filePath };
   } catch (err) {
     return { success: false, error: err.message };

@@ -209,6 +209,10 @@ METADATA-->
 </html>`;
 }
 
+if (typeof window !== 'undefined') {
+  window.generateKineticTypography = generateKineticTypography;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { generateKineticTypography };
 }

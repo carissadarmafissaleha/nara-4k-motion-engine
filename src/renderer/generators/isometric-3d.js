@@ -209,6 +209,10 @@ METADATA-->
 </html>`;
 }
 
+if (typeof window !== 'undefined') {
+  window.generateIsometric3D = generateIsometric3D;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { generateIsometric3D };
 }
