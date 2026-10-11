@@ -11,6 +11,18 @@
 
 > ⚡ **High-performance desktop offline engine to render HTML5/Canvas/WebGL animations into 4K MP4 & Apple ProRes 4444 Alpha MOV with zero temp files, embedded stock metadata, safe-append CSV, and browser companion extension.**
 
+<p align="center">
+  <a href="https://github.com/carissadarmafissaleha/nara-4k-motion-engine/blob/main/screenshoot/Screenshot%201.png">
+    <img src="screenshoot/Screenshot%201.png" alt="NARA Motion Studio - Live Preview & Batch Queue" width="100%" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/carissadarmafissaleha/nara-4k-motion-engine/blob/main/screenshoot/Screenshot%202.png">
+    <img src="screenshoot/Screenshot%202.png" alt="NARA Motion Graphics Studio Generator" width="100%" />
+  </a>
+</p>
+
 **NARA** adalah aplikasi desktop berarsitektur modern berbasis **Electron** dan **Node.js** yang dirancang khusus untuk kreator Microstock (_Adobe Stock, Shutterstock, Pond5, Envato Elements_). NARA mengonversi animasi web (HTML5, SVG, Canvas 2D, WebGL) menjadi video komersial 4K (MP4 Ultra Bitrate dan MOV Apple ProRes 4444 Alpha Channel transparan) secara offline, deterministik, dan bebas file temporer (_zero temp files_).
 
 Aplikasi ini mengusung arsitektur visual **shadcn/ui Monochrome Zinc** yang presisi, minimalis, dan berorientasi profesional, menggunakan tipografi Google **Plus Jakarta Sans**, serta responsif terhadap berbagai ukuran resolusi layar laptop maupun monitor 4K.
