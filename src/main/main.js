@@ -21,7 +21,7 @@ function createWindow() {
     minHeight: 560,
     title: 'NARA - Commercial 4K & ProRes 4444 Motion Studio',
     backgroundColor: '#070a12',
-    show: false,
+    show: true,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),
@@ -36,6 +36,11 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    mainWindow.focus();
+  });
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('[Window Load Error]', errorCode, errorDescription);
   });
 
   mainWindow.on('closed', () => {
@@ -43,15 +48,29 @@ function createWindow() {
   });
 }
 
-// App lifecycle
-app.whenReady().then(() => {
-  renderEngine = new RenderEngine();
-  createWindow();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+// Single instance lock to prevent duplicate background instances
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
   });
-});
+
+  // App lifecycle
+  app.whenReady().then(() => {
+    renderEngine = new RenderEngine();
+    createWindow();
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  });
+}
 
 app.on('window-all-closed', async () => {
   if (renderEngine) {
