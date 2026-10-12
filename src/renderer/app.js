@@ -1060,6 +1060,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     isPlaying: false,
     currentFrame: 0,
     fps: 60,
+    activeBgMode: 'checkerboard',
     isRendering: false,
     playInterval: null
   };
@@ -1371,6 +1372,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     outputDirPath.textContent = 'C:\\Nara Motions';
   }
 
+  updateAlphaToggleVisibility();
+  setAlphaBgMode(state.activeBgMode || 'checkerboard');
+
   // ==========================================================================
   // Global Settings Controls
   // ==========================================================================
@@ -1440,6 +1444,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Preset Format & Codec Change Listener
   selectPreset.addEventListener('change', () => {
     const newPreset = selectPreset.value;
+    updateAlphaToggleVisibility();
     state.queue.forEach((item) => {
       item.metadata.preset = newPreset;
     });
@@ -1462,6 +1467,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       item.metadata.width = w;
       item.metadata.height = h;
       item.metadata.preset = preset;
+      item.metadata.bgMode = state.activeBgMode;
     });
 
     if (state.activePreviewIndex >= 0) {
@@ -1472,17 +1478,60 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ==========================================================================
-  // Alpha Inspection Modes
+  // Alpha Inspection & Background Render Mode Controller
   // ==========================================================================
 
-  alphaToggleGroup.querySelectorAll('.toggle-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      alphaToggleGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const bgMode = btn.dataset.bg;
-      previewViewport.className = `preview-viewport ${bgMode}`;
+  function updateAlphaToggleVisibility() {
+    if (!alphaToggleGroup) return;
+    let activePreset = selectPreset.value;
+    if (state.activePreviewIndex >= 0 && state.queue[state.activePreviewIndex]) {
+      const item = state.queue[state.activePreviewIndex];
+      activePreset = item.metadata.preset || activePreset;
+    }
+    const isProResAlpha = (activePreset === 'prores4444' || activePreset === 'prores' || activePreset === 'mov');
+    alphaToggleGroup.style.display = isProResAlpha ? 'inline-flex' : 'none';
+  }
+
+  function setAlphaBgMode(bgMode) {
+    const mode = bgMode || 'checkerboard';
+    state.activeBgMode = mode;
+
+    if (alphaToggleGroup) {
+      alphaToggleGroup.querySelectorAll('.toggle-btn').forEach((b) => {
+        if (b.dataset.bg === mode) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+    }
+
+    if (previewViewport) {
+      previewViewport.classList.remove('checkerboard', 'bg-dark', 'bg-light', 'bg-green');
+      if (mode === 'checkerboard') {
+        previewViewport.classList.add('checkerboard');
+      } else if (mode === 'dark') {
+        previewViewport.classList.add('bg-dark');
+      } else if (mode === 'light') {
+        previewViewport.classList.add('bg-light');
+      } else if (mode === 'green') {
+        previewViewport.classList.add('bg-green');
+      }
+    }
+
+    if (state.activePreviewIndex >= 0 && state.queue[state.activePreviewIndex]) {
+      state.queue[state.activePreviewIndex].metadata.bgMode = mode;
+    }
+  }
+
+  if (alphaToggleGroup) {
+    alphaToggleGroup.querySelectorAll('.toggle-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const bg = btn.dataset.bg || 'checkerboard';
+        setAlphaBgMode(bg);
+      });
     });
-  });
+  }
 
   // ==========================================================================
   // 1:1 Aspect Ratio Match & Live Preview Player
@@ -1639,6 +1688,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     updatePlaybackRange();
+    updateAlphaToggleVisibility();
+    setAlphaBgMode(meta.bgMode || state.activeBgMode || 'checkerboard');
   }
 
   // Per-Video Total Frames Input
@@ -2072,26 +2123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnExitFloatingFullscreen.addEventListener('click', toggleFullscreenPreview);
   }
 
-  // Alpha Background Mode Toggles (Grid Checkerboard, Dark, Light, Green Screen)
-  if (alphaToggleGroup) {
-    alphaToggleGroup.querySelectorAll('.toggle-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        alphaToggleGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const bg = btn.dataset.bg;
-        previewViewport.classList.remove('checkerboard', 'bg-dark', 'bg-light', 'bg-green');
-        if (bg === 'checkerboard') {
-          previewViewport.classList.add('checkerboard');
-        } else if (bg === 'dark') {
-          previewViewport.classList.add('bg-dark');
-        } else if (bg === 'light') {
-          previewViewport.classList.add('bg-light');
-        } else if (bg === 'green') {
-          previewViewport.classList.add('bg-green');
-        }
-      });
-    });
-  }
+// Alpha background toggles handled centrally above
 
   // Keyboard Shortcuts: F for Fullscreen, ESC to exit fullscreen, Space for Play/Pause
   document.addEventListener('keydown', (e) => {
@@ -2164,7 +2196,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           holdLastFrames,
           width,
           height,
-          preset: defPreset
+          preset: defPreset,
+          bgMode: state.activeBgMode || 'checkerboard'
         };
 
         const item = {
@@ -2302,6 +2335,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     metadataCard.style.opacity = '0.5';
     updateQueueDisplay();
     updatePlaybackDisplay();
+    updateAlphaToggleVisibility();
   }
 
   // Clear Entire Queue Button
@@ -2404,10 +2438,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           width: meta.width || globalWidth,
           height: meta.height || globalHeight,
           fps,
-          preset: globalPreset,
+          preset: item.metadata.preset || globalPreset,
           isSeamlessLoop,
           holdLastFrames,
           totalFrames,
+          bgMode: meta.bgMode || state.activeBgMode || 'checkerboard',
           // Carry full customized metadata for CSV export
           metadata: {
             title: meta.title,
@@ -2421,7 +2456,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         preset: globalPreset,
         width: globalWidth,
         height: globalHeight,
-        fps: globalFps
+        fps: globalFps,
+        bgMode: state.activeBgMode || 'checkerboard'
       }
     };
 

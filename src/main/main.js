@@ -269,11 +269,13 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
     const width = item.width || settings.width || 3840;
     const height = item.height || settings.height || 2160;
     const totalFrames = item.totalFrames || settings.totalFrames || 180;
+    const bgMode = item.bgMode || settings.bgMode || 'checkerboard';
 
     const isProRes = preset === 'prores4444' || preset === 'prores' || preset === 'mov';
     const ext = isProRes ? '.mov' : '.mp4';
     const baseName = path.basename(item.filePath, path.extname(item.filePath));
-    const outputFilename = `${baseName}_${preset}_${width}x${height}_${fps}fps${ext}`;
+    const bgSuffix = (bgMode && bgMode !== 'checkerboard') ? `_${bgMode}` : '';
+    const outputFilename = `${baseName}_${preset}${bgSuffix}_${width}x${height}_${fps}fps${ext}`;
     const outputPath = path.join(outputDir, outputFilename);
 
     mainWindow.webContents.send('render:status', {
@@ -321,6 +323,7 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
           totalFrames,
           isSeamlessLoop,
           holdLastFrames,
+          bgMode,
           metadata: mergedMeta
         },
         (progress) => {

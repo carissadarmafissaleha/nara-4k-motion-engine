@@ -261,13 +261,14 @@ class RenderEngine {
       fps = 60,
       totalFrames = 180,
       isSeamlessLoop = true,
-      holdLastFrames = 0
+      holdLastFrames = 0,
+      bgMode = 'checkerboard'
     } = config;
 
     const ffmpegPath = resolveFfmpegPath();
     onLog(`[Engine] Initializing render for: ${path.basename(htmlPath)}`);
     onLog(`[Engine] Target resolution: ${width}x${height} @ ${fps}fps`);
-    onLog(`[Engine] Preset: ${preset} | Loop: ${isSeamlessLoop} | Hold: ${holdLastFrames}`);
+    onLog(`[Engine] Preset: ${preset} | Loop: ${isSeamlessLoop} | Hold: ${holdLastFrames} | BG: ${bgMode}`);
     onLog(`[Engine] Using FFmpeg binary: ${ffmpegPath}`);
 
     // Ensure output directory exists
@@ -350,26 +351,74 @@ class RenderEngine {
       timeout: 45000
     });
 
-    // Handle background transparency according to preset & configuration
+    // Handle background transparency & color strictly according to preset and user-selected bgMode
     const isProResAlpha = (preset === 'prores4444' || preset === 'prores' || preset === 'mov');
-    const isExplicitlyTransparent = config.isTransparent === true || (config.isTransparent !== false && isProResAlpha);
+    let targetBgCss = null;
+    let cdpBgColor = { r: 0, g: 0, b: 0, a: 0 };
+    let isTransparentCapture = false;
 
-    if (isProResAlpha && isExplicitlyTransparent) {
-      try {
-        const client = await page.target().createCDPSession();
-        await client.send('Emulation.setDefaultBackgroundColorOverride', {
-          color: { r: 0, g: 0, b: 0, a: 0 }
-        });
-      } catch (e) {
-        onLog(`[Warning] Could not set CDP background transparency: ${e.message}`);
+    if (isProResAlpha) {
+      if (bgMode === 'dark') {
+        targetBgCss = '#000000';
+        cdpBgColor = { r: 0, g: 0, b: 0, a: 255 };
+        isTransparentCapture = false;
+        onLog('[Engine] Background applied: Dark Solid (#000000)');
+      } else if (bgMode === 'light') {
+        targetBgCss = '#ffffff';
+        cdpBgColor = { r: 255, g: 255, b: 255, a: 255 };
+        isTransparentCapture = false;
+        onLog('[Engine] Background applied: Light Solid (#ffffff)');
+      } else if (bgMode === 'green') {
+        targetBgCss = '#00b140';
+        cdpBgColor = { r: 0, g: 177, b: 64, a: 255 };
+        isTransparentCapture = false;
+        onLog('[Engine] Background applied: Green Screen Chroma Key (#00b140)');
+      } else {
+        // Default 'checkerboard' / transparent: Pure Transparent Alpha Channel
+        targetBgCss = 'transparent';
+        cdpBgColor = { r: 0, g: 0, b: 0, a: 0 };
+        isTransparentCapture = true;
+        onLog('[Engine] Background applied: Pure Transparent Alpha Channel');
       }
+    } else {
+      // For MP4 or opaque exports
+      if (bgMode === 'dark') {
+        targetBgCss = '#000000';
+        cdpBgColor = { r: 0, g: 0, b: 0, a: 255 };
+        isTransparentCapture = false;
+        onLog('[Engine] Background applied: Dark Solid (#000000)');
+      } else if (bgMode === 'light') {
+        targetBgCss = '#ffffff';
+        cdpBgColor = { r: 255, g: 255, b: 255, a: 255 };
+        isTransparentCapture = false;
+        onLog('[Engine] Background applied: Light Solid (#ffffff)');
+      } else if (bgMode === 'green') {
+        targetBgCss = '#00b140';
+        cdpBgColor = { r: 0, g: 177, b: 64, a: 255 };
+        isTransparentCapture = false;
+        onLog('[Engine] Background applied: Green Screen Chroma Key (#00b140)');
+      } else {
+        targetBgCss = null; // Retain native HTML gradients/colors
+        cdpBgColor = { r: 0, g: 0, b: 0, a: 255 };
+        isTransparentCapture = false;
+      }
+    }
 
-      // Force HTML & Body transparency only for transparent ProRes alpha exports
+    try {
+      const client = await page.target().createCDPSession();
+      await client.send('Emulation.setDefaultBackgroundColorOverride', {
+        color: cdpBgColor
+      });
+    } catch (e) {
+      onLog(`[Warning] Could not set CDP background color override: ${e.message}`);
+    }
+
+    if (targetBgCss) {
       await page.addStyleTag({
         content: `
           html, body {
-            background-color: transparent !important;
-            background: transparent !important;
+            background-color: ${targetBgCss} !important;
+            background: ${targetBgCss} !important;
             margin: 0 !important;
             padding: 0 !important;
             overflow: hidden !important;
@@ -377,16 +426,6 @@ class RenderEngine {
         `
       });
     } else {
-      // For MP4 or opaque animations, retain user background gradients/colors with solid composite
-      try {
-        const client = await page.target().createCDPSession();
-        await client.send('Emulation.setDefaultBackgroundColorOverride', {
-          color: { r: 0, g: 0, b: 0, a: 255 }
-        });
-      } catch (e) {
-        // ignore
-      }
-
       await page.addStyleTag({
         content: `
           html, body {
@@ -463,10 +502,10 @@ class RenderEngine {
           }
         }, tickFrame, fps);
 
-        // Capture transparent frame buffer (Zero Temp Files)
+        // Capture frame buffer (Zero Temp Files) - omitBackground only when transparent alpha requested
         const frameBuffer = await page.screenshot({
           type: 'png',
-          omitBackground: true,
+          omitBackground: isTransparentCapture,
           captureBeyondViewport: false
         });
 
