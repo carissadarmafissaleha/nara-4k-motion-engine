@@ -562,7 +562,8 @@ body {
   letter-spacing: -0.02em;
 }
 
-.preview-header-actions {
+.preview-header-actions,
+.queue-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
