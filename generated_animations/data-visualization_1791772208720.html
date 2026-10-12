@@ -1,0 +1,185 @@
+<!--METADATA
+{
+  "title": "FinTech Data Visualization FINTECH-HUD",
+  "description": "Futuristic HUD telemetry and FinTech animated data analytics dashboard for microstock video.",
+  "keywords": ["data visualization","hud","infographic","analytics","finance","fintech","dashboard","charts","graphs","futuristic","technology","4k","seamless loop"],
+  "category": "Technology",
+  "fps": 60,
+  "total_frames": 180,
+  "loop": true,
+  "width": 3840,
+  "height": 2160
+}
+METADATA-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body, html {
+    width: 3840px;
+    height: 2160px;
+    overflow: hidden;
+    background-color: #02120A;
+    font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+  }
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3840px;
+    height: 2160px;
+  }
+  #overlay {
+    position: absolute;
+    top: 180px;
+    left: 200px;
+    color: #E8FFF5;
+    z-index: 10;
+  }
+  .tag {
+    font-size: 32px;
+    letter-spacing: 12px;
+    color: #00FF88;
+    font-weight: 700;
+  }
+  .main-val {
+    font-size: 130px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    text-shadow: 0 0 25px #00FF88;
+  }
+</style>
+</head>
+<body>
+<div id="overlay">
+  <div class="tag">GLOBAL ANALYTICS HUD</div>
+  <div class="main-val" id="metricVal">$8,492,100</div>
+</div>
+<canvas id="canvas" width="3840" height="2160"></canvas>
+
+<script>
+  const TOTAL_FRAMES = 180;
+  const FPS = 60;
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d', { alpha: true });
+  const colors = {"primary":"#00FF88","secondary":"#0099FF","accent":"#E8FFF5","grid":"rgba(0,255,136,0.15)","bg":"#02120A"};
+  const isTransparent = false;
+  const metricValEl = document.getElementById('metricVal');
+  const chartType = "fintech-hud";
+  const baseValueText = "$8,492,100";
+
+  const barCount = 18;
+  const bars = [];
+  for (let i = 0; i < barCount; i++) {
+    bars.push({
+      heightBase: 240 + ((i * 19) % 360),
+      phase: i * 0.35,
+      speed: 1.0 + (i % 3) * 0.3
+    });
+  }
+
+  function renderFrame(frameIndex) {
+    const progress = (frameIndex % TOTAL_FRAMES) / TOTAL_FRAMES;
+    const angle = progress * Math.PI * 2;
+
+    if (isTransparent) {
+      ctx.clearRect(0, 0, 3840, 2160);
+    } else {
+      ctx.fillStyle = '#02120A';
+      ctx.fillRect(0, 0, 3840, 2160);
+    }
+
+    // Dynamic numeric counter if percentage, otherwise breathing pulse
+    if (baseValueText.includes('%')) {
+      const pct = (85.2 + Math.sin(angle) * 14.6).toFixed(1);
+      metricValEl.textContent = '+' + pct + '%';
+    }
+
+    // 1. Draw Radial Gauge
+    if (chartType === 'fintech-hud' || chartType === 'radial-gauge') {
+      const rcx = 2800;
+      const rcy = 1080;
+      const rad = 500;
+
+      ctx.save();
+      ctx.lineWidth = 36;
+      ctx.lineCap = 'round';
+
+      // Background track
+      ctx.strokeStyle = colors.grid;
+      ctx.beginPath();
+      ctx.arc(rcx, rcy, rad, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Active illuminated arc with crystal gradient
+      const startA = -Math.PI / 2;
+      const endA = startA + (Math.PI * 1.5) * (0.55 + Math.sin(angle) * 0.35);
+      const gradArc = ctx.createLinearGradient(rcx - rad, rcy, rcx + rad, rcy);
+      gradArc.addColorStop(0, colors.secondary);
+      gradArc.addColorStop(1, colors.primary);
+
+      ctx.strokeStyle = gradArc;
+      ctx.shadowColor = colors.primary;
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.arc(rcx, rcy, rad, startA, endA);
+      ctx.stroke();
+
+      // Inner Concentric Pulse
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = colors.primary;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(rcx, rcy, rad - 70, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 2. Bar Chart Race / Analytics
+    if (chartType === 'fintech-hud' || chartType === 'telemetry-bars') {
+      const bx = 300;
+      const by = 1800;
+      const barW = 75;
+      const gap = 35;
+
+      ctx.save();
+      for (let i = 0; i < barCount; i++) {
+        const b = bars[i];
+        const h = b.heightBase + Math.sin(angle * b.speed + b.phase) * 220;
+        const x = bx + i * (barW + gap);
+        const y = by - h;
+
+        const gradBar = ctx.createLinearGradient(x, by, x, y);
+        gradBar.addColorStop(0, colors.secondary);
+        gradBar.addColorStop(1, colors.primary);
+
+        ctx.fillStyle = gradBar;
+        ctx.fillRect(x, y, barW, h);
+
+        // Top glowing cap highlight
+        ctx.fillStyle = '#FFFFFF';
+        ctx.shadowColor = colors.primary;
+        ctx.shadowBlur = 14;
+        ctx.fillRect(x, y - 4, barW, 6);
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+    }
+  }
+
+  window.__renderTick = function(frameIndex) {
+    renderFrame(frameIndex);
+  };
+
+  let currentFrame = 0;
+  function animate() {
+    renderFrame(currentFrame);
+    currentFrame = (currentFrame + 1) % TOTAL_FRAMES;
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+</script>
+</body>
+</html>
