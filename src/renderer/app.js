@@ -112,7 +112,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnStudioSaveHtml: "Simpan File .HTML",
       btnStudioGenerateQueue: "Generate & Masukkan ke Antrean",
       logStudioGenerated: "[Studio] Template animasi berhasil dibuat & ditambahkan ke antrean:",
-      logStudioSaved: "[Studio] File HTML berhasil disimpan:"
+      logStudioSaved: "[Studio] File HTML berhasil disimpan:",
+      logSoundActive: "[Sound] Suara notifikasi selesai: AKTIF (Audio Test OK)",
+      logSoundMuted: "[Sound] Suara notifikasi selesai: BISU (Muted)",
+      logQueueAdded: "[Queue] Ditambahkan ke antrean:",
+      logTargetFolder: "[Config] Folder hasil target:",
+      logBatchStart: "[Batch] Memulai pipeline render untuk",
+      logBatchCancelling: "[Batch] Permintaan pembatalan dikirim ke engine...",
+      logBatchComplete: "[Batch Selesai] Total:",
+      logCsvExport: "[Ekspor CSV Stok] File CSV berhasil disimpan:",
+      logEngineInit: "[Engine] Memulai render file:",
+      logEngineTarget: "[Engine] Resolusi target:",
+      logEnginePreset: "[Engine] Preset format:",
+      logEngineFrames: "[Engine] Total frame direncanakan:",
+      logStudioPreview: "[Studio] Live preview dimuat:",
+      logStudioCancel: "[Studio] Penyimpanan HTML dibatalkan.",
+      logThemeChanged: "[Theme] Tampilan tema diubah ke:",
+      logPresetChanged: "[Config] Preset output diubah ke:",
+      logEngineFfmpeg: "[Engine] Menggunakan binary FFmpeg:",
+      logEnginePiped: "[Engine] Semua frame terkirim. Menutup stdin FFmpeg...",
+      logEngineSuccess: "[Engine] Render selesai dengan sukses:",
+      logEngineFailed: "[Engine Error] Render gagal:"
     },
     en: {
       soundEnabled: "Sound: On",
@@ -208,7 +228,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnStudioSaveHtml: "Save .HTML File",
       btnStudioGenerateQueue: "Generate & Add to Queue",
       logStudioGenerated: "[Studio] Animation template generated and queued:",
-      logStudioSaved: "[Studio] HTML file saved successfully:"
+      logStudioSaved: "[Studio] HTML file saved successfully:",
+      logSoundActive: "[Sound] Completion notification chime: ACTIVE (Audio Test OK)",
+      logSoundMuted: "[Sound] Completion notification chime: MUTED",
+      logQueueAdded: "[Queue] Added to batch queue:",
+      logTargetFolder: "[Config] Target output folder:",
+      logBatchStart: "[Batch] Starting render pipeline for",
+      logBatchCancelling: "[Batch] Cancellation request sent to engine...",
+      logBatchComplete: "[Batch Complete] Total:",
+      logCsvExport: "[Stock CSV Export] Stock metadata CSV exported to:",
+      logEngineInit: "[Engine] Initializing render for:",
+      logEngineTarget: "[Engine] Target resolution:",
+      logEnginePreset: "[Engine] Codec preset:",
+      logEngineFrames: "[Engine] Frames planned:",
+      logStudioPreview: "[Studio] Live preview loaded:",
+      logStudioCancel: "[Studio] HTML save cancelled.",
+      logThemeChanged: "[Theme] UI Theme switched to:",
+      logPresetChanged: "[Config] Output preset changed to:",
+      logEngineFfmpeg: "[Engine] Using FFmpeg binary:",
+      logEnginePiped: "[Engine] All frames piped. Closing FFmpeg stdin...",
+      logEngineSuccess: "[Engine] Render completed successfully:",
+      logEngineFailed: "[Engine Error] Render failed:"
     },
     ja: {
       soundEnabled: "通知音: オン",
@@ -279,7 +319,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       logQueueCleared: "[Queue] キュー内のすべての項目が削除されました。",
       logDefaultsApplied: "[Config] すべての項目にグローバル設定が適用されました。",
       logRenderCancelled: "[Engine] ユーザーによってレンダリングが中止されました。",
-      alertSelectValidHtml: ".htmlまたは.htmファイルのみサポートされています。"
+      alertSelectValidHtml: ".htmlまたは.htmファイルのみサポートされています。",
+      logStudioGenerated: "[Studio] アニメーションテンプレートを作成しキューに追加:",
+      logStudioSaved: "[Studio] HTMLファイルを正常に保存:",
+      logSoundActive: "[Sound] 完了通知音: オン (オーディオテスト完了)",
+      logSoundMuted: "[Sound] 完了通知音: 消音",
+      logQueueAdded: "[Queue] キューに追加されました:",
+      logTargetFolder: "[Config] 出力先フォルダ:",
+      logBatchStart: "[Batch] レンダリングパイプラインを開始:",
+      logBatchCancelling: "[Batch] 中止リクエストをエンジンに送信中...",
+      logBatchComplete: "[Batch 完了] 合計:",
+      logCsvExport: "[Stock CSV Export] ストックメタデータCSVを出力:",
+      logEngineInit: "[Engine] レンダリングを初期化中:",
+      logEngineTarget: "[Engine] ターゲット解像度:",
+      logEnginePreset: "[Engine] コーデックプリセット:",
+      logEngineFfmpeg: "[Engine] FFmpegバイナリを使用:",
+      logEngineFrames: "[Engine] 計画フレーム数:",
+      logEnginePiped: "[Engine] すべてのフレームの転送完了。FFmpeg stdinを閉じます...",
+      logEngineSuccess: "[Engine] レンダリングが正常に完了しました:",
+      logEngineFailed: "[Engine Error] レンダリング失敗:",
+      logThemeChanged: "[Theme] UIテーマが変更されました:",
+      logPresetChanged: "[Config] 出力プリセットを変更:",
+      logStudioPreview: "[Studio] ライブプレビューをロードしました:",
+      logStudioCancel: "[Studio] HTMLの保存がキャンセルされました。"
     },
     zh: {
       soundEnabled: "提示音: 开启",
@@ -350,7 +412,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       logQueueCleared: "[Queue] 队列中所有项目已清空。",
       logDefaultsApplied: "[Config] 全局默认设置已应用到全部项目。",
       logRenderCancelled: "[Engine] 批量渲染已被用户取消。",
-      alertSelectValidHtml: "仅支持 .html 或 .htm 格式文件。"
+      alertSelectValidHtml: "仅支持 .html 或 .htm 格式文件。",
+      logStudioGenerated: "[Studio] 动画模板已生成并加入队列:",
+      logStudioSaved: "[Studio] HTML 文件保存成功:",
+      logSoundActive: "[Sound] 完成提示音: 开启 (音频测试正常)",
+      logSoundMuted: "[Sound] 完成提示音: 静音",
+      logQueueAdded: "[Queue] 已添加到批量队列:",
+      logTargetFolder: "[Config] 目标输出文件夹:",
+      logBatchStart: "[Batch] 启动渲染流水线，共",
+      logBatchCancelling: "[Batch] 正在向引擎发送取消请求...",
+      logBatchComplete: "[Batch 完成] 总计:",
+      logCsvExport: "[Stock CSV 导出] 图库元数据 CSV 已导出至:",
+      logEngineInit: "[Engine] 正在初始化渲染:",
+      logEngineTarget: "[Engine] 目标分辨率:",
+      logEnginePreset: "[Engine] 编码预设:",
+      logEngineFfmpeg: "[Engine] 正在使用 FFmpeg 二进制文件:",
+      logEngineFrames: "[Engine] 计划总帧数:",
+      logEnginePiped: "[Engine] 所有帧已传输完成。正在关闭 FFmpeg stdin...",
+      logEngineSuccess: "[Engine] 渲染成功完成:",
+      logEngineFailed: "[Engine 错误] 渲染失败:",
+      logThemeChanged: "[Theme] 界面主题已切换为:",
+      logPresetChanged: "[Config] 输出预设已更改为:",
+      logStudioPreview: "[Studio] 实时预览已加载:",
+      logStudioCancel: "[Studio] 已取消 HTML 保存。"
     },
     es: {
       soundEnabled: "Sonido: On",
@@ -421,7 +505,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       logQueueCleared: "[Queue] Se han eliminado todos los elementos de la cola.",
       logDefaultsApplied: "[Config] Configuración global aplicada a todos los elementos.",
       logRenderCancelled: "[Engine] Renderizado por lotes cancelado por el usuario.",
-      alertSelectValidHtml: "Solo se admiten archivos .html o .htm."
+      alertSelectValidHtml: "Solo se admiten archivos .html o .htm.",
+      logStudioGenerated: "[Studio] Plantilla de animación generada y agregada a la cola:",
+      logStudioSaved: "[Studio] Archivo HTML guardado con éxito:",
+      logSoundActive: "[Sound] Sonido de finalización: ACTIVO (Prueba de audio OK)",
+      logSoundMuted: "[Sound] Sonido de finalización: MUDO",
+      logQueueAdded: "[Queue] Añadido a la cola por lotes:",
+      logTargetFolder: "[Config] Carpeta de salida objetivo:",
+      logBatchStart: "[Batch] Iniciando renderizado por lotes para",
+      logBatchCancelling: "[Batch] Solicitud de cancelación enviada al motor...",
+      logBatchComplete: "[Batch Completado] Total:",
+      logCsvExport: "[Stock CSV Export] Metadatos CSV exportados a:",
+      logEngineInit: "[Engine] Inicializando renderizado para:",
+      logEngineTarget: "[Engine] Resolución objetivo:",
+      logEnginePreset: "[Engine] Preajuste de códec:",
+      logEngineFfmpeg: "[Engine] Usando binario FFmpeg:",
+      logEngineFrames: "[Engine] Fotogramas planificados:",
+      logEnginePiped: "[Engine] Todos los fotogramas enviados. Cerrando stdin de FFmpeg...",
+      logEngineSuccess: "[Engine] Renderizado completado con éxito:",
+      logEngineFailed: "[Engine Error] Fallo de renderizado:",
+      logThemeChanged: "[Theme] Tema de interfaz cambiado a:",
+      logPresetChanged: "[Config] Preajuste de salida cambiado a:",
+      logStudioPreview: "[Studio] Vista previa en vivo cargada:",
+      logStudioCancel: "[Studio] Guardado de HTML cancelado."
     },
     de: {
       soundEnabled: "Ton: An",
@@ -492,7 +598,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       logQueueCleared: "[Queue] Alle Elemente aus der Warteschlange gelöscht.",
       logDefaultsApplied: "[Config] Globale Einstellungen auf alle Elemente angewendet.",
       logRenderCancelled: "[Engine] Batch-Rendering vom Benutzer abgebrochen.",
-      alertSelectValidHtml: "Nur .html- oder .htm-Dateien werden unterstützt."
+      alertSelectValidHtml: "Nur .html- oder .htm-Dateien werden unterstützt.",
+      logStudioGenerated: "[Studio] Animationsvorlage generiert und zur Warteschlange hinzugefügt:",
+      logStudioSaved: "[Studio] HTML-Datei erfolgreich gespeichert:",
+      logSoundActive: "[Sound] Benachrichtigungston: AKTIV (Audiotest OK)",
+      logSoundMuted: "[Sound] Benachrichtigungston: STUMM",
+      logQueueAdded: "[Queue] Zur Warteschlange hinzugefügt:",
+      logTargetFolder: "[Config] Ziel-Ausgabeordner:",
+      logBatchStart: "[Batch] Starte Render-Pipeline für",
+      logBatchCancelling: "[Batch] Abbruchanforderung an Engine gesendet...",
+      logBatchComplete: "[Batch Fertig] Gesamt:",
+      logCsvExport: "[Stock CSV Export] Stock-Metadaten CSV exportiert nach:",
+      logEngineInit: "[Engine] Initialisiere Rendern für:",
+      logEngineTarget: "[Engine] Zielauflösung:",
+      logEnginePreset: "[Engine] Codec-Voreinstellung:",
+      logEngineFfmpeg: "[Engine] Verwende FFmpeg-Binärdatei:",
+      logEngineFrames: "[Engine] Geplante Frames:",
+      logEnginePiped: "[Engine] Alle Frames übertragen. Schließe FFmpeg-Stdin...",
+      logEngineSuccess: "[Engine] Rendern erfolgreich abgeschlossen:",
+      logEngineFailed: "[Engine Fehler] Rendern fehlgeschlagen:",
+      logThemeChanged: "[Theme] UI-Design gewechselt zu:",
+      logPresetChanged: "[Config] Ausgabevoreinstellung geändert auf:",
+      logStudioPreview: "[Studio] Live-Vorschau geladen:",
+      logStudioCancel: "[Studio] HTML-Speichern abgebrochen."
     },
     fr: {
       soundEnabled: "Son: Activé",
@@ -563,7 +691,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       logQueueCleared: "[Queue] Tous les éléments ont été supprimés de la file d'attente.",
       logDefaultsApplied: "[Config] Paramètres globaux appliqués à tous les éléments.",
       logRenderCancelled: "[Engine] Rendu par lot annulé par l'utilisateur.",
-      alertSelectValidHtml: "Seuls les fichiers .html ou .htm sont pris en charge."
+      alertSelectValidHtml: "Seuls les fichiers .html ou .htm sont pris en charge.",
+      logStudioGenerated: "[Studio] Modèle d'animation généré et ajouté à la file:",
+      logStudioSaved: "[Studio] Fichier HTML enregistré avec succès:",
+      logSoundActive: "[Sound] Son de notification: ACTIF (Test audio OK)",
+      logSoundMuted: "[Sound] Son de notification: MUET",
+      logQueueAdded: "[Queue] Ajouté à la file de rendu:",
+      logTargetFolder: "[Config] Dossier de sortie cible:",
+      logBatchStart: "[Batch] Démarrage du pipeline de rendu pour",
+      logBatchCancelling: "[Batch] Demande d'annulation envoyée au moteur...",
+      logBatchComplete: "[Batch Terminé] Total:",
+      logCsvExport: "[Stock CSV Export] Métadonnées CSV exportées vers:",
+      logEngineInit: "[Engine] Initialisation du rendu pour:",
+      logEngineTarget: "[Engine] Résolution cible:",
+      logEnginePreset: "[Engine] Préréglage de codec:",
+      logEngineFfmpeg: "[Engine] Utilisation du binaire FFmpeg:",
+      logEngineFrames: "[Engine] Images planifiées:",
+      logEnginePiped: "[Engine] Toutes les images transmises. Fermeture de stdin FFmpeg...",
+      logEngineSuccess: "[Engine] Rendu terminé avec succès:",
+      logEngineFailed: "[Engine Erreur] Échec du rendu:",
+      logThemeChanged: "[Theme] Thème de l'interface changé en:",
+      logPresetChanged: "[Config] Préréglage de sortie modifié vers:",
+      logStudioPreview: "[Studio] Aperçu en direct chargé:",
+      logStudioCancel: "[Studio] Enregistrement HTML annulé."
     },
     pt: {
       soundEnabled: "Som: Ligado",
@@ -634,7 +784,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       logQueueCleared: "[Queue] Todos os itens foram removidos da fila.",
       logDefaultsApplied: "[Config] Configurações padrão aplicadas a todos os itens.",
       logRenderCancelled: "[Engine] Renderização em lote cancelada pelo usuário.",
-      alertSelectValidHtml: "Apenas arquivos .html ou .htm são suportados."
+      alertSelectValidHtml: "Apenas arquivos .html ou .htm são suportados.",
+      logStudioGenerated: "[Studio] Modelo de animação gerado e adicionado à fila:",
+      logStudioSaved: "[Studio] Arquivo HTML salvo com sucesso:",
+      logSoundActive: "[Sound] Som de notificação: ATIVO (Teste de áudio OK)",
+      logSoundMuted: "[Sound] Som de notificação: MUDO",
+      logQueueAdded: "[Queue] Adicionado à fila:",
+      logTargetFolder: "[Config] Pasta de saída de destino:",
+      logBatchStart: "[Batch] Iniciando pipeline de renderização para",
+      logBatchCancelling: "[Batch] Solicitação de cancelamento enviada ao motor...",
+      logBatchComplete: "[Batch Concluído] Total:",
+      logCsvExport: "[Stock CSV Export] Metadados CSV exportados para:",
+      logEngineInit: "[Engine] Inicializando renderização para:",
+      logEngineTarget: "[Engine] Resolução alvo:",
+      logEnginePreset: "[Engine] Predefinição de codec:",
+      logEngineFfmpeg: "[Engine] Usando binário FFmpeg:",
+      logEngineFrames: "[Engine] Quadros planejados:",
+      logEnginePiped: "[Engine] Todos os quadros canalizados. Fechando stdin do FFmpeg...",
+      logEngineSuccess: "[Engine] Renderização concluída com sucesso:",
+      logEngineFailed: "[Engine Erro] Falha na renderização:",
+      logThemeChanged: "[Theme] Tema da interface alterado para:",
+      logPresetChanged: "[Config] Predefinição de saída alterada para:",
+      logStudioPreview: "[Studio] Pré-visualização ao vivo carregada:",
+      logStudioCancel: "[Studio] Salvamento de HTML cancelado."
     },
     ru: {
       soundEnabled: "Звук: Вкл",
@@ -705,7 +877,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       logQueueCleared: "[Queue] Все элементы удалены из очереди.",
       logDefaultsApplied: "[Config] Глобальные настройки применены ко всем элементам.",
       logRenderCancelled: "[Engine] Пакетный рендеринг отменён пользователем.",
-      alertSelectValidHtml: "Поддерживаются только файлы .html или .htm."
+      alertSelectValidHtml: "Поддерживаются только файлы .html или .htm.",
+      logStudioGenerated: "[Studio] Шаблон анимации сгенерирован и добавлен в очередь:",
+      logStudioSaved: "[Studio] HTML файл успешно сохранён:",
+      logSoundActive: "[Sound] Звук завершения: ВКЛ (Аудиотест пройден)",
+      logSoundMuted: "[Sound] Звук завершения: ВЫКЛ (Без звука)",
+      logQueueAdded: "[Queue] Добавлено в очередь:",
+      logTargetFolder: "[Config] Целевая папка вывода:",
+      logBatchStart: "[Batch] Запуск конвейера рендеринга для",
+      logBatchCancelling: "[Batch] Запрос на отмену отправлен в движок...",
+      logBatchComplete: "[Batch Завершён] Всего:",
+      logCsvExport: "[Stock CSV Export] CSV-метаданные экспортированы в:",
+      logEngineInit: "[Engine] Инициализация рендеринга для:",
+      logEngineTarget: "[Engine] Целевое разрешение:",
+      logEnginePreset: "[Engine] Пресет кодека:",
+      logEngineFfmpeg: "[Engine] Используется бинарник FFmpeg:",
+      logEngineFrames: "[Engine] Запланировано кадров:",
+      logEnginePiped: "[Engine] Все кадры переданы. Закрытие stdin FFmpeg...",
+      logEngineSuccess: "[Engine] Рендеринг успешно завершён:",
+      logEngineFailed: "[Engine Ошибка] Ошибка рендеринга:",
+      logThemeChanged: "[Theme] Тема интерфейса изменена на:",
+      logPresetChanged: "[Config] Пресет вывода изменён на:",
+      logStudioPreview: "[Studio] Предпросмотр загружен:",
+      logStudioCancel: "[Studio] Сохранение HTML отменено."
     },
     ko: {
       soundEnabled: "알림음: 켜짐",
@@ -776,7 +970,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       logQueueCleared: "[Queue] 대기열의 모든 항목이 삭제되었습니다.",
       logDefaultsApplied: "[Config] 모든 항목에 전역 기본 설정이 적용되었습니다.",
       logRenderCancelled: "[Engine] 사용자가 배치 렌더링을 취소했습니다.",
-      alertSelectValidHtml: ".html 또는 .htm 파일만 지원됩니다."
+      alertSelectValidHtml: ".html 또는 .htm 파일만 지원됩니다.",
+      logStudioGenerated: "[Studio] 애니메이션 템플릿 생성 및 대기열 추가:",
+      logStudioSaved: "[Studio] HTML 파일이 성공적으로 저장되었습니다:",
+      logSoundActive: "[Sound] 완료 알림음: 켜짐 (오디오 테스트 완료)",
+      logSoundMuted: "[Sound] 완료 알림음: 음소거",
+      logQueueAdded: "[Queue] 대기열에 추가됨:",
+      logTargetFolder: "[Config] 대상 출력 폴더:",
+      logBatchStart: "[Batch] 렌더링 파이프라인 시작:",
+      logBatchCancelling: "[Batch] 엔진에 취소 요청 전송 중...",
+      logBatchComplete: "[Batch 완료] 총:",
+      logCsvExport: "[Stock CSV 내보내기] 스톡 메타데이터 CSV 저장 경로:",
+      logEngineInit: "[Engine] 렌더링 초기화 중:",
+      logEngineTarget: "[Engine] 목표 해상도:",
+      logEnginePreset: "[Engine] 코덱 프리셋:",
+      logEngineFfmpeg: "[Engine] FFmpeg 바이너리 사용:",
+      logEngineFrames: "[Engine] 계획된 프레임:",
+      logEnginePiped: "[Engine] 모든 프레임 파이프 전달 완료. FFmpeg stdin 닫는 중...",
+      logEngineSuccess: "[Engine] 렌더링이 성공적으로 완료되었습니다:",
+      logEngineFailed: "[Engine 오류] 렌더링 실패:",
+      logThemeChanged: "[Theme] UI 테마가 변경되었습니다:",
+      logPresetChanged: "[Config] 출력 프리셋 변경:",
+      logStudioPreview: "[Studio] 실시간 미리보기 로드됨:",
+      logStudioCancel: "[Studio] HTML 저장이 취소되었습니다."
     }
   };
 
@@ -818,6 +1034,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateQueueDisplay();
     updatePlaybackDisplay();
+
+    // Re-translate all terminal log lines (initial and dynamic logs)
+    const terminalLogsEl = document.getElementById('terminalLogs');
+    if (terminalLogsEl) {
+      terminalLogsEl.querySelectorAll('.log-line').forEach((line) => {
+        const logKey = line.dataset.logKey || line.getAttribute('data-i18n');
+        if (logKey && dict[logKey]) {
+          const param = line.dataset.logParam || '';
+          line.textContent = param ? `${dict[logKey]} ${param}` : dict[logKey];
+        }
+      });
+    }
   }
 
   // ==========================================================================
@@ -931,10 +1159,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     return dict[key] || key;
   }
 
-  function addTerminalLog(message, type = 'normal') {
+  function addTerminalLog(message, type = 'normal', i18nKey = null, param = '') {
     const line = document.createElement('div');
     line.className = `log-line ${type}`;
-    line.textContent = message;
+    if (i18nKey) {
+      line.dataset.logKey = i18nKey;
+      line.dataset.logParam = param || '';
+      line.textContent = param ? `${t(i18nKey)} ${param}` : t(i18nKey);
+    } else {
+      line.textContent = message;
+    }
     terminalLogs.appendChild(line);
     terminalLogs.scrollTop = terminalLogs.scrollHeight;
   }
@@ -982,7 +1216,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnThemeToggle.addEventListener('click', () => {
       const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
       applyTheme(targetTheme);
-      addTerminalLog(`[Theme] Neumorphic Soft UI: ${targetTheme === 'light' ? 'Light Mode (Snow Silver)' : 'Dark Mode (Charcoal Slate)'}`, 'normal');
+      const themeLabel = targetTheme === 'light' ? t('themeLight') : t('themeDark');
+      addTerminalLog('', 'normal', 'logThemeChanged', themeLabel);
     });
   }
 
@@ -1112,9 +1347,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateSoundToggleUI();
       if (isSoundEnabled) {
         playNotificationSound('success');
-        addTerminalLog('[Sound] Suara notifikasi selesai: AKTIF (Audio Test OK)', 'info');
+        addTerminalLog('', 'info', 'logSoundActive');
       } else {
-        addTerminalLog('[Sound] Suara notifikasi selesai: BISU (Muted)', 'info');
+        addTerminalLog('', 'info', 'logSoundMuted');
       }
     });
   }
@@ -1208,10 +1443,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.queue.forEach((item) => {
       item.metadata.preset = newPreset;
     });
-    const presetLabel = newPreset === 'prores4444' 
-      ? 'MOV ProRes 4444 (Alpha Transparan)' 
-      : (newPreset === 'mp4_4k' ? 'MP4 High Bitrate 4K (CRF 15)' : 'MP4 Sosmed 1080p (CRF 20)');
-    addTerminalLog(`[Config] Preset output diubah ke: ${presetLabel}`, 'info');
+    const presetLabel = newPreset === 'prores4444'
+      ? t('presetProres')
+      : (newPreset === 'mp4_4k' ? t('presetMp44k') : t('presetMp4Sosmed'));
+    addTerminalLog('', 'info', 'logPresetChanged', presetLabel);
   });
 
   // Apply Defaults to All items in queue (Preset, Resolution, FPS - frames follow each file)
@@ -1233,7 +1468,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadActiveVideoToEditor(state.activePreviewIndex);
     }
     updateQueueDisplay();
-    addTerminalLog(t('logDefaultsApplied'), 'info');
+    addTerminalLog('', 'info', 'logDefaultsApplied');
   });
 
   // ==========================================================================
@@ -1944,7 +2179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         state.queue.push(item);
-        addTerminalLog(`[Queue] Added: ${metadata.filename} (${metadata.title || 'Untitled'})`, 'info');
+        addTerminalLog('', 'info', 'logQueueAdded', `${metadata.filename} (${metadata.title || 'Untitled'})`);
       } catch (err) {
         addTerminalLog(`[Error] Failed to read ${filePath}: ${err.message}`, 'error');
       }
@@ -2036,7 +2271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (index < 0 || index >= state.queue.length) return;
 
     const removed = state.queue.splice(index, 1)[0];
-    addTerminalLog(`${t('logItemDeleted')} ${removed.filename}`, 'info');
+    addTerminalLog('', 'info', 'logItemDeleted', removed.filename);
 
     if (state.queue.length === 0) {
       clearAllQueueState();
@@ -2073,7 +2308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnClearQueue.addEventListener('click', () => {
     if (state.isRendering || state.queue.length === 0) return;
     clearAllQueueState();
-    addTerminalLog(t('logQueueCleared'), 'info');
+    addTerminalLog('', 'info', 'logQueueCleared');
   });
 
   // Browse Files & Folders
@@ -2112,7 +2347,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (files.length) {
       await addFilesToQueue(files);
     } else {
-      addTerminalLog(t('alertSelectValidHtml'), 'error');
+      addTerminalLog('', 'error', 'alertSelectValidHtml');
     }
   });
 
@@ -2123,7 +2358,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       state.currentOutputDirectory = dir;
       outputDirPath.textContent = dir;
       outputDirPath.title = dir;
-      addTerminalLog(`[Config] Target folder: ${dir}`);
+      addTerminalLog('', 'info', 'logTargetFolder', dir);
     }
   });
 
@@ -2208,7 +2443,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     batchPercentText.textContent = '0%';
     batchProgressText.textContent = `Starting batch render (0 / ${state.queue.length})...`;
 
-    addTerminalLog(`[Batch] Memulai pipeline render untuk ${state.queue.length} file...`, 'info');
+    addTerminalLog('', 'info', 'logBatchStart', `${state.queue.length} files...`);
 
     try {
       const result = await window.api.startBatchRender(payload);
@@ -2223,7 +2458,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Cancel Render
   btnCancelRender.addEventListener('click', async () => {
     await window.api.cancelBatchRender();
-    addTerminalLog('[Batch] Permintaan pembatalan dikirim ke engine...', 'error');
+    addTerminalLog('', 'error', 'logBatchCancelling');
   });
 
   // ==========================================================================
@@ -2231,7 +2466,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ==========================================================================
 
   window.api.onRenderLog((msg) => {
-    addTerminalLog(msg);
+    if (typeof msg !== 'string') {
+      addTerminalLog(String(msg));
+      return;
+    }
+
+    if (msg.startsWith('[Engine] Initializing render for: ')) {
+      addTerminalLog('', 'info', 'logEngineInit', msg.slice(34));
+    } else if (msg.startsWith('[Engine] Target resolution: ')) {
+      addTerminalLog('', 'info', 'logEngineTarget', msg.slice(28));
+    } else if (msg.startsWith('[Engine] Preset: ')) {
+      addTerminalLog('', 'info', 'logEnginePreset', msg.slice(17));
+    } else if (msg.startsWith('[Engine] Using FFmpeg binary: ')) {
+      addTerminalLog('', 'info', 'logEngineFfmpeg', msg.slice(30));
+    } else if (msg.startsWith('[Engine] Frames planned: ')) {
+      addTerminalLog('', 'info', 'logEngineFrames', msg.slice(24));
+    } else if (msg.startsWith('[Engine] All frames piped. Closing FFmpeg stdin...')) {
+      addTerminalLog('', 'info', 'logEnginePiped');
+    } else if (msg.startsWith('[Engine] Render completed successfully: ')) {
+      addTerminalLog('', 'success', 'logEngineSuccess', msg.slice(41));
+    } else if (msg.includes('Render cancelled by user')) {
+      addTerminalLog('', 'error', 'logRenderCancelled');
+    } else if (msg.startsWith('[Engine Error] Render failed: ')) {
+      addTerminalLog('', 'error', 'logEngineFailed', msg.slice(30));
+    } else {
+      addTerminalLog(msg);
+    }
   });
 
   window.api.onRenderStatusChange((statusData) => {
@@ -2245,7 +2505,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (statusData.status === 'cancelled') {
       finishRenderUI();
       batchProgressText.textContent = t('logRenderCancelled');
-      addTerminalLog(t('logRenderCancelled'), 'error');
+      addTerminalLog('', 'error', 'logRenderCancelled');
     }
   });
 
@@ -2285,9 +2545,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     batchProgressText.textContent = `Complete! ${summary.successful} OK, ${summary.failed} Failed.`;
 
     addTerminalLog(`==================================================`, 'success');
-    addTerminalLog(`[Batch Complete] Total: ${summary.total} | OK: ${summary.successful} | Failed: ${summary.failed}`, 'success');
+    addTerminalLog('', 'success', 'logBatchComplete', `${summary.total} | OK: ${summary.successful} | Failed: ${summary.failed}`);
     if (summary.csvPath) {
-      addTerminalLog(`[Stock CSV Export] Path: ${summary.csvPath}`, 'info');
+      addTerminalLog('', 'info', 'logCsvExport', summary.csvPath);
     }
 
     // Play notification sound on completion
@@ -2795,7 +3055,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       loadStudioGeneratedPreview(htmlContent, meta);
-      addTerminalLog(`[Studio] Live preview loaded: ${studioSelectedCategory} (${params.totalFrames} frames)`, 'info');
+      addTerminalLog('', 'info', 'logStudioPreview', `${studioSelectedCategory} (${params.totalFrames} frames)`);
     });
   }
 
@@ -2848,7 +3108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           loadPreviewFile(state.queue.length - 1);
         }
 
-        addTerminalLog(`${t('logStudioGenerated')} ${filename}`, 'success');
+        addTerminalLog('', 'success', 'logStudioGenerated', filename);
       } catch (err) {
         addTerminalLog(`[Studio Error] ${err.message}`, 'error');
       } finally {
@@ -2882,10 +3142,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
 
           if (res && res.success) {
-            addTerminalLog(`${t('logStudioSaved')} ${res.filePath}`, 'success');
+            addTerminalLog('', 'success', 'logStudioSaved', res.filePath);
             return;
           } else if (res && res.canceled) {
-            addTerminalLog('[Studio] Penyimpanan HTML dibatalkan.', 'info');
+            addTerminalLog('', 'info', 'logStudioCancel');
             return;
           } else if (res && res.error) {
             addTerminalLog(`[Studio Error] Dialog gagal: ${res.error}`, 'error');
@@ -2902,7 +3162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-        addTerminalLog(`${t('logStudioSaved')} ${defaultFilename} (Download Otomatis)`, 'success');
+        addTerminalLog('', 'success', 'logStudioSaved', `${defaultFilename} (Download)`);
       } catch (err) {
         addTerminalLog(`[Studio Error] Gagal menyimpan HTML: ${err.message}`, 'error');
       }
