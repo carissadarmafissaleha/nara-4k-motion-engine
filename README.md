@@ -7,7 +7,7 @@
 [![Node.js Version](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022%20LTS-zinc.svg?style=flat-square)](https://nodejs.org)
 [![Electron](https://img.shields.io/badge/Electron-39.x-zinc.svg?style=flat-square)](https://www.electronjs.org/)
 [![Microstock Ready](https://img.shields.io/badge/Microstock-Adobe%20Stock%20%7C%20Shutterstock-zinc.svg?style=flat-square)](#-fitur-auto-metadata-csv--in-file-metadata-)
-[![UI Design](https://img.shields.io/badge/UI-shadcn%2Fui%20Monochrome%20Zinc-zinc.svg?style=flat-square)](https://ui.shadcn.com)
+[![Theme](https://img.shields.io/badge/Theme-Dark%20%7C%20Light%20Mode-zinc.svg?style=flat-square)](#2-live-preview--timeline-player)
 
 > ⚡ **High-performance desktop offline engine to render HTML5/Canvas/WebGL animations into 4K MP4 & Apple ProRes 4444 Alpha MOV with zero temp files, embedded stock metadata, safe-append CSV, and browser companion extension.**
 
@@ -25,30 +25,7 @@
 
 **NARA** adalah aplikasi desktop berarsitektur modern berbasis **Electron** dan **Node.js** yang dirancang khusus untuk kreator Microstock (_Adobe Stock, Shutterstock, Pond5, Envato Elements_). NARA mengonversi animasi web (HTML5, SVG, Canvas 2D, WebGL) menjadi video komersial 4K (MP4 Ultra Bitrate dan MOV Apple ProRes 4444 Alpha Channel transparan) secara offline, deterministik, dan bebas file temporer (_zero temp files_).
 
-Aplikasi ini mengusung arsitektur visual **shadcn/ui Monochrome Zinc** yang presisi, minimalis, dan berorientasi profesional, menggunakan tipografi Google **Plus Jakarta Sans**, serta responsif terhadap berbagai ukuran resolusi layar laptop maupun monitor 4K.
-
----
-
-## 🎨 Tampilan UI/UX: shadcn/ui Monochrome Zinc Architecture
-
-NARA mengadopsi bahasa desain **[shadcn/ui](https://ui.shadcn.com/)** bergaya **Monochrome Zinc** yang presisi, minimalis, dan berorientasi profesional developer tools:
-
-- **Palet Warna Zinc Monochrome**:
-  - 🌙 **Dark Mode (Default)**: Kanvas gelap pekat (`#09090b` / Zinc 950), kartu modular (`#111114` / Zinc 900), serta tepian 1px razor-sharp (`#27272a` / Zinc 800) yang jernih dan bebas distorsi visual.
-  - ☀️ **Light Mode**: Kanvas putih bersih (`#ffffff`), kartu terstruktur (`#fafafa`), dan border presisi (`#e4e4e7` / Zinc 200).
-- **Header Bar Minimalis & Icon-Only Toggles**:
-  - Tombol **Dark/Light Mode** dan **Suara Notifikasi** menggunakan desain tombol ikon bujur sangkar 32×32px presisi (_icon-only_) dengan siluet vektor SVG yang bersih, bebas teks berlebih, dan dilengkapi _tooltip hover_.
-  - Pemilih bahasa ringkas menggunakan kode ID bahasa standar (`EN`, `ID`, `JA`, `ZH`, dll.) dengan default bahasa **English (EN)**.
-  - Badge codec ProRes disederhanakan menjadi **`4444`** yang bersih dan padat.
-- **Signature shadcn High-Contrast Buttons**:
-  - Tombol aksi utama (_Start Batch Render_, _Generate & Masukkan ke Antrean_) menggunakan warna putih solid `#fafafa` dengan teks hitam pekat `#09090b` (atau hitam dengan teks putih pada light mode) berbobot tebal, menghasilkan kontras hierarki visual tertinggi.
-  - Tombol sekunder (_Pilih File HTML_, _Scan Folder_, _Buka Folder_) menggunakan outline zinc bertepi presisi.
-- **Form Controls & Checkboxes**:
-  - Input, textarea, dan dropdown menggunakan padding presisi, sudut kurva `6px` / `8px`, dan efek focus ring khas shadcn (`box-shadow: 0 0 0 1px #a1a1aa`).
-  - Checkbox bujur sangkar minimalis berukuran 16×16px dengan centang tegas.
-- **Tipografi Plus Jakarta Sans**:
-  - Memanfaatkan font Google **Plus Jakarta Sans** dengan spasi huruf presisi, hierarki tebal yang terkalibrasi, dan angka monospace pada timecode serta resolusi.
-- **Responsive Adaptive Layout**: Tata letak fleksibel yang menyesuaikan skala secara otomatis saat ukuran jendela aplikasi diperbesar maupun diperkecil (dari layar 4K hingga laptop kompak).
+Aplikasi ini mengusung antarmuka visual modern, minimalis, dan berorientasi profesional dengan dukungan Dark & Light Mode, audio notifikasi Web Audio API, tipografi presisi Google **Plus Jakarta Sans**, serta tata letak responsif terhadap berbagai ukuran resolusi layar laptop maupun monitor 4K.
 
 ---
 
@@ -100,7 +77,7 @@ Setelah instalasi selesai, jalankan aplikasi NARA dengan perintah:
 npm start
 ```
 
-Jendela aplikasi NARA berdesain **shadcn/ui Monochrome Zinc** akan terbuka dan siap digunakan.
+Jendela aplikasi NARA akan terbuka dan siap digunakan.
 
 ---
 
@@ -188,11 +165,14 @@ NARA dilengkapi generator bawaan untuk memproduksi animasi mandiri (_self-contai
 - **Scrubber & Timeline Player**: Periksa setiap frame dengan slider scrubber presisi (`Frame: X` / `Total: Y F`).
 - **Aspect Ratio & Frame Rate Real-Time Match**: Penggantian resolusi (3840×2160, 1920×1080, 1080×1920, 1080×1080) dan FPS (60, 30, 24) seketika memperbarui aspek rasio viewport preview, kecepatan interval putar (_playback speed_), overlay tag info, dan clock virtual animasi tanpa distorsi atau terpotong.
 - **Hold Last Frame Zone**: Pada animasi _One-Shot_, preview memutar animasi lalu menahan frame terakhir sesuai durasi hold frame dengan indikator visual bergaris pada scrubber.
-- **Alpha Inspection Mode**:
-  - `Grid`: Background kotak-kotak catur transparansi.
-  - `Dark`: Background hitam pekat (#000000).
-  - `Light`: Background putih bersih (#ffffff).
-  - `Green`: Background hijau chroma key (#00b140) untuk pengujian keying VFX.
+- **Opsi Background Alpha (Muncul Otomatis pada Preset ProRes 4444)**:
+  - Tombol opsi Alpha (**Grid**, **Dark**, **Light**, **Green**) muncul secara dinamis khusus saat memilih preset **MOV ProRes 4444** (disembunyikan pada preset MP4 agar antarmuka tetap bersih dan relevan).
+  - **Sinkronisasi Render 1:1 (Hasil Render Sesuai Pilihan)**:
+    - `Grid`: Render transparan dengan *Alpha Channel* murni (ProRes 4444 transparan untuk overlay editing video).
+    - `Dark`: Render dengan latar belakang hitam pekat solid (`#000000`).
+    - `Light`: Render dengan latar belakang putih bersih solid (`#ffffff`).
+    - `Green`: Render dengan latar belakang hijau *Green Screen Chroma Key* (`#00b140`).
+    - *Memastikan warna latar belakang yang di-render 100% konsisten dengan yang dipilih pengguna, bukan latar belakang lain.*
 - **Fullscreen Mode**: Mode layar penuh untuk memeriksa detail visual dalam resolusi maksimal.
 
 ---
@@ -279,6 +259,8 @@ _Contoh Perhitungan:_
   - `MP4 High Bitrate 4K (CRF 12 / yuv420p)`: Format video komersial 4K ultra jernih, mastering gradasi tajam dan bebas banding.
   - `MP4 Social 1080p`: Format ringkas untuk kebutuhan media sosial.
 - **Dukungan Resolusi**: 3840×2160 UHD (16:9), 1920×1080 FHD (16:9), 1080×1920 Vertikal (9:16), 1080×1080 Persegi (1:1).
+- **Folder Output Default (Nara Motions)**: File hasil render secara otomatis disimpan ke folder `Nara Motions` (`C:\Nara Motions` di Windows atau folder Home pengguna), dapat diubah kapan saja dengan tombol *Ubah Folder*.
+- **Posisi Kontrol Render Ergonomis**: Tombol *Start Batch Render* diposisikan di sebelah kanan kontrol antrean untuk navigasi eksekusi yang lebih cepat.
 - **Suara Notifikasi Render Selesai (Audio Chime)**:
   - Sintesis audio harmonik C5-E5-G5-C6 berbasis Web Audio API (100% offline tanpa dependensi file eksternal) berbunyi otomatis saat antrean batch render selesai.
   - Tombol sakelar suara di header atas memungkinkan pengaktifan/pembisuan (_mute_) atau pengujian audio dengan satu klik.
@@ -317,9 +299,9 @@ _Contoh Perhitungan:_
 
 ---
 
-### 7. Multi-Bahasa Global (10 Bahasa - Default EN)
+### 7. Multi-Bahasa Global (10 Bahasa - Default EN) & Log Terminal Reaktif
 
-Pilih bahasa antarmuka secara instan melalui dropdown kode ID bahasa ringkas di bar navigasi atas (Default: **`EN`**):
+Pilih bahasa antarmuka secara instan melalui dropdown kode ID bahasa ringkas di bar navigasi atas (Default: **`EN`**). **Seluruh baris log streaming di konsol terminal bawah otomatis terlokalisasi dan berubah secara real-time saat bahasa diganti:**
 
 1. 🇺🇸 **`EN`** - English _(Default)_
 2. 🇮🇩 **`ID`** - Bahasa Indonesia
