@@ -1489,11 +1489,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       activePreset = item.metadata.preset || activePreset;
     }
     const isProResAlpha = (activePreset === 'prores4444' || activePreset === 'prores' || activePreset === 'mov');
-    alphaToggleGroup.style.display = isProResAlpha ? 'inline-flex' : 'none';
+    
+    // Background toggle group stays visible for all presets
+    alphaToggleGroup.style.display = 'inline-flex';
+
+    // Transparency / Grid button only appears if ProRes 4444 is selected
+    const gridBtn = alphaToggleGroup.querySelector('[data-bg="checkerboard"]');
+    if (gridBtn) {
+      gridBtn.style.display = isProResAlpha ? 'inline-flex' : 'none';
+    }
+
+    // If not ProRes 4444 and checkerboard was selected, automatically fallback to dark background
+    if (!isProResAlpha && state.activeBgMode === 'checkerboard') {
+      setAlphaBgMode('dark');
+    }
   }
 
   function setAlphaBgMode(bgMode) {
-    const mode = bgMode || 'checkerboard';
+    let mode = bgMode || 'checkerboard';
+    let activePreset = selectPreset.value;
+    if (state.activePreviewIndex >= 0 && state.queue[state.activePreviewIndex]) {
+      const item = state.queue[state.activePreviewIndex];
+      activePreset = item.metadata.preset || activePreset;
+    }
+    const isProResAlpha = (activePreset === 'prores4444' || activePreset === 'prores' || activePreset === 'mov');
+    if (!isProResAlpha && mode === 'checkerboard') {
+      mode = 'dark';
+    }
+
     state.activeBgMode = mode;
 
     if (alphaToggleGroup) {
@@ -1880,41 +1903,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           };
 
-          // Override transparent styling matching headless Chrome
+          // Override styling for full page centering
           const style = document.createElement('style');
-          style.innerHTML = 'html, body { background: transparent !important; background-color: transparent !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; } canvas, svg { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }';
+          style.innerHTML = 'html, body { background: transparent !important; background-color: transparent !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; } canvas, svg, #stage, .stage, .canvas-container { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }';
           document.head.appendChild(style);
 
           function fitStage() {
             const curW = window.innerWidth;
             const curH = window.innerHeight;
-            const stage = document.getElementById('stage') || document.querySelector('.stage') || document.querySelector('.canvas-container');
-            if (stage) {
-              const origW = parseFloat(stage.dataset.width) || parseFloat(stage.style.width) || 3840;
-              const origH = parseFloat(stage.dataset.height) || parseFloat(stage.style.height) || 2160;
+            const target = document.getElementById('stage') ||
+                           document.querySelector('.stage') ||
+                           document.querySelector('.canvas-container') ||
+                           document.getElementById('container') ||
+                           document.querySelector('canvas') ||
+                           document.querySelector('svg');
+            if (target) {
+              const cs = window.getComputedStyle(target);
+              const origW = parseFloat(target.dataset.width) || parseFloat(target.style.width) || (target.width ? target.width : null) || parseFloat(cs.width) || curW;
+              const origH = parseFloat(target.dataset.height) || parseFloat(target.style.height) || (target.height ? target.height : null) || parseFloat(cs.height) || curH;
               if (origW > 0 && origH > 0) {
                 const scale = Math.min(curW / origW, curH / origH);
-                stage.style.position = 'absolute';
-                stage.style.left = '50%';
-                stage.style.top = '50%';
-                stage.style.transformOrigin = 'center center';
-                stage.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
-                stage.style.margin = '0';
-              }
-            } else {
-              const canvas = document.querySelector('canvas');
-              if (canvas) {
-                const origW = canvas.width || parseFloat(canvas.style.width) || 3840;
-                const origH = canvas.height || parseFloat(canvas.style.height) || 2160;
-                if (origW > 0 && origH > 0) {
-                  const scale = Math.min(curW / origW, curH / origH);
-                  canvas.style.position = 'absolute';
-                  canvas.style.left = '50%';
-                  canvas.style.top = '50%';
-                  canvas.style.transformOrigin = 'center center';
-                  canvas.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
-                  canvas.style.margin = '0';
-                }
+                target.style.position = 'absolute';
+                target.style.left = '50%';
+                target.style.top = '50%';
+                target.style.transformOrigin = 'center center';
+                target.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+                target.style.margin = '0';
               }
             }
           }
@@ -2933,39 +2947,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           };
           const style = document.createElement('style');
-          style.innerHTML = 'html, body { background: transparent !important; background-color: transparent !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; } canvas, svg { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }';
+          style.innerHTML = 'html, body { background: transparent !important; background-color: transparent !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; } canvas, svg, #stage, .stage, .canvas-container { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; }';
           document.head.appendChild(style);
 
           function fitStage() {
             const curW = window.innerWidth;
             const curH = window.innerHeight;
-            const stage = document.getElementById('stage') || document.querySelector('.stage') || document.querySelector('.canvas-container');
-            if (stage) {
-              const origW = parseFloat(stage.dataset.width) || parseFloat(stage.style.width) || 3840;
-              const origH = parseFloat(stage.dataset.height) || parseFloat(stage.style.height) || 2160;
+            const target = document.getElementById('stage') ||
+                           document.querySelector('.stage') ||
+                           document.querySelector('.canvas-container') ||
+                           document.getElementById('container') ||
+                           document.querySelector('canvas') ||
+                           document.querySelector('svg');
+            if (target) {
+              const cs = window.getComputedStyle(target);
+              const origW = parseFloat(target.dataset.width) || parseFloat(target.style.width) || (target.width ? target.width : null) || parseFloat(cs.width) || curW;
+              const origH = parseFloat(target.dataset.height) || parseFloat(target.style.height) || (target.height ? target.height : null) || parseFloat(cs.height) || curH;
               if (origW > 0 && origH > 0) {
                 const scale = Math.min(curW / origW, curH / origH);
-                stage.style.position = 'absolute';
-                stage.style.left = '50%';
-                stage.style.top = '50%';
-                stage.style.transformOrigin = 'center center';
-                stage.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
-                stage.style.margin = '0';
-              }
-            } else {
-              const canvas = document.querySelector('canvas');
-              if (canvas) {
-                const origW = canvas.width || parseFloat(canvas.style.width) || 3840;
-                const origH = canvas.height || parseFloat(canvas.style.height) || 2160;
-                if (origW > 0 && origH > 0) {
-                  const scale = Math.min(curW / origW, curH / origH);
-                  canvas.style.position = 'absolute';
-                  canvas.style.left = '50%';
-                  canvas.style.top = '50%';
-                  canvas.style.transformOrigin = 'center center';
-                  canvas.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
-                  canvas.style.margin = '0';
-                }
+                target.style.position = 'absolute';
+                target.style.left = '50%';
+                target.style.top = '50%';
+                target.style.transformOrigin = 'center center';
+                target.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+                target.style.margin = '0';
               }
             }
           }

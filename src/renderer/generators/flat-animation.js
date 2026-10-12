@@ -46,16 +46,25 @@ METADATA-->
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body, html {
-    width: 3840px;
-    height: 2160px;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
     background-color: ${bgColor};
     font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   #stage {
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 3840px;
     height: 2160px;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -178,13 +187,16 @@ METADATA-->
     renderFrame(frameIndex);
   };
 
-  let currentFrame = 0;
-  function animate() {
-    renderFrame(currentFrame);
-    currentFrame = (currentFrame + 1) % TOTAL_FRAMES;
-    requestAnimationFrame(animate);
+  // Auto fit stage to full viewport while remaining centered
+  function autoFitStage() {
+    const stage = document.getElementById('stage');
+    if (!stage) return;
+    const scale = Math.min(window.innerWidth / 3840, window.innerHeight / 2160);
+    stage.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
   }
-  requestAnimationFrame(animate);
+  window.addEventListener('resize', autoFitStage);
+  window.addEventListener('DOMContentLoaded', autoFitStage);
+  autoFitStage();
 </script>
 </body>
 </html>`;

@@ -427,29 +427,51 @@ class RenderEngine {
       onLog(`[Warning] Could not set CDP background color override: ${e.message}`);
     }
 
-    if (targetBgCss) {
-      await page.addStyleTag({
-        content: `
-          html, body {
-            background-color: ${targetBgCss} !important;
-            background: ${targetBgCss} !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-          }
-        `
-      });
-    } else {
-      await page.addStyleTag({
-        content: `
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-          }
-        `
-      });
-    }
+    await page.addStyleTag({
+      content: `
+        html, body {
+          width: 100% !important;
+          height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
+          ${targetBgCss ? `background-color: ${targetBgCss} !important; background: ${targetBgCss} !important;` : ''}
+        }
+        canvas, svg, #stage, .stage, .canvas-container {
+          max-width: 100% !important;
+          max-height: 100% !important;
+          object-fit: contain !important;
+        }
+      `
+    });
+
+    await page.evaluate(() => {
+      const curW = window.innerWidth;
+      const curH = window.innerHeight;
+      const target = document.getElementById('stage') ||
+                     document.querySelector('.stage') ||
+                     document.querySelector('.canvas-container') ||
+                     document.getElementById('container') ||
+                     document.querySelector('canvas') ||
+                     document.querySelector('svg');
+      if (target) {
+        const cs = window.getComputedStyle(target);
+        const origW = parseFloat(target.dataset.width) || parseFloat(target.style.width) || (target.width ? target.width : null) || parseFloat(cs.width) || curW;
+        const origH = parseFloat(target.dataset.height) || parseFloat(target.style.height) || (target.height ? target.height : null) || parseFloat(cs.height) || curH;
+        if (origW > 0 && origH > 0) {
+          const scale = Math.min(curW / origW, curH / origH);
+          target.style.position = 'absolute';
+          target.style.left = '50%';
+          target.style.top = '50%';
+          target.style.transformOrigin = 'center center';
+          target.style.transform = `translate(-50%, -50%) scale(${scale})`;
+          target.style.margin = '0';
+        }
+      }
+    });
 
     // 6. Spawn FFmpeg Process
     const ffmpegArgs = getFfmpegArgs(preset, fps, outputPath, config.metadata || {});

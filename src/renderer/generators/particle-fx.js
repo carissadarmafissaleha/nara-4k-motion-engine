@@ -54,17 +54,22 @@ METADATA-->
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body, html {
-    width: 3840px;
-    height: 2160px;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
     background-color: ${bgColor};
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 3840px;
-    height: 2160px;
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    margin: auto;
   }
 </style>
 </head>
