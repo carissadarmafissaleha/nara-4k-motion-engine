@@ -1,0 +1,177 @@
+<!--METADATA
+{
+  "title": "Isometric 3D Tech Grid CYBER-MATRIX",
+  "description": "Futuristic isometric 3D geometric grid with animated elevating cubes and illuminated data tracks.",
+  "keywords": ["isometric","isometric 3d","3d","tech grid","cubes","futuristic","motion graphics","data center","technology","blockchain","4k","seamless loop"],
+  "category": "Technology",
+  "fps": 60,
+  "total_frames": 180,
+  "loop": true,
+  "width": 3840,
+  "height": 2160
+}
+METADATA-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body, html {
+    width: 3840px;
+    height: 2160px;
+    overflow: hidden;
+    background-color: #040714;
+  }
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3840px;
+    height: 2160px;
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas" width="3840" height="2160"></canvas>
+
+<script>
+  const TOTAL_FRAMES = 180;
+  const FPS = 60;
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d', { alpha: true });
+  const N = Math.floor(6 / 2);
+  const isTransparent = false;
+  const colors = {"top":"#00F0FF","left":"#0055FF","right":"#002B80","glow":"#00F0FF","bg":"#040714"};
+  const elevationAmp = 80;
+  const motif = "geometric-matrix";
+
+  const tileW = 190;
+  const tileH = 95;
+  const originX = 1920;
+  const originY = 1220;
+
+  function hexToRgba(hex, alpha) {
+    const clean = hex.replace('#', '');
+    let r = parseInt(clean.substring(0, 2), 16);
+    let g = parseInt(clean.substring(2, 4), 16);
+    let b = parseInt(clean.substring(4, 6), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+  }
+
+  // Isometric 2.5D cube drawer
+  function drawIsoCube(gx, gy, heightVal) {
+    const sx = originX + (gx - gy) * (tileW / 2);
+    const sy = originY + (gx + gy) * (tileH / 2) - heightVal;
+
+    const hw = tileW / 2;
+    const hh = tileH / 2;
+    const h = heightVal;
+
+    // 1. Left Face Gradient
+    const leftGrad = ctx.createLinearGradient(sx - hw, sy, sx, sy + tileH + h);
+    leftGrad.addColorStop(0, colors.left);
+    leftGrad.addColorStop(1, hexToRgba(colors.left, 0.45));
+    ctx.fillStyle = leftGrad;
+    ctx.beginPath();
+    ctx.moveTo(sx - hw, sy + hh);
+    ctx.lineTo(sx, sy + tileH);
+    ctx.lineTo(sx, sy + tileH + h);
+    ctx.lineTo(sx - hw, sy + hh + h);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 2. Right Face Gradient
+    const rightGrad = ctx.createLinearGradient(sx, sy, sx + hw, sy + tileH + h);
+    rightGrad.addColorStop(0, colors.right);
+    rightGrad.addColorStop(1, hexToRgba(colors.right, 0.35));
+    ctx.fillStyle = rightGrad;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy + tileH);
+    ctx.lineTo(sx + hw, sy + hh);
+    ctx.lineTo(sx + hw, sy + hh + h);
+    ctx.lineTo(sx, sy + tileH + h);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.stroke();
+
+    // 3. Top Face Radiant Gradient
+    const topGrad = ctx.createLinearGradient(sx - hw, sy, sx + hw, sy + tileH);
+    topGrad.addColorStop(0, '#FFFFFF');
+    topGrad.addColorStop(0.35, colors.top);
+    topGrad.addColorStop(1, colors.left);
+    ctx.fillStyle = topGrad;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + hw, sy + hh);
+    ctx.lineTo(sx, sy + tileH);
+    ctx.lineTo(sx - hw, sy + hh);
+    ctx.closePath();
+    ctx.fill();
+
+    // Glowing edge highlight on top face
+    ctx.strokeStyle = colors.glow;
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  function renderFrame(frameIndex) {
+    const progress = (frameIndex % TOTAL_FRAMES) / TOTAL_FRAMES;
+    const angle = progress * Math.PI * 2;
+
+    if (isTransparent) {
+      ctx.clearRect(0, 0, 3840, 2160);
+    } else {
+      ctx.fillStyle = '#040714';
+      ctx.fillRect(0, 0, 3840, 2160);
+    }
+
+    // Sort grid from back to front
+    const cubes = [];
+    for (let x = -N; x <= N; x++) {
+      for (let y = -N; y <= N; y++) {
+        const dist = Math.sqrt(x * x + y * y);
+        let elevation;
+
+        if (motif === 'circuit-pillars') {
+          elevation = Math.sin(angle + (x + y) * 0.9) * elevationAmp + (elevationAmp + 30);
+        } else if (motif === 'pulse-blocks') {
+          elevation = Math.abs(Math.sin(angle + (x * 0.5) - (y * 0.7))) * (elevationAmp * 1.6) + 30;
+        } else {
+          // geometric-matrix ripple
+          elevation = Math.sin(angle + dist * 0.75) * elevationAmp + (elevationAmp + 40);
+        }
+
+        cubes.push({ x, y, elevation, depth: x + y });
+      }
+    }
+
+    cubes.sort((a, b) => a.depth - b.depth);
+
+    for (const c of cubes) {
+      drawIsoCube(c.x, c.y, c.elevation);
+    }
+  }
+
+  window.__renderTick = function(frameIndex) {
+    renderFrame(frameIndex);
+  };
+
+  let currentFrame = 0;
+  function animate() {
+    renderFrame(currentFrame);
+    currentFrame = (currentFrame + 1) % TOTAL_FRAMES;
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+</script>
+</body>
+</html>
