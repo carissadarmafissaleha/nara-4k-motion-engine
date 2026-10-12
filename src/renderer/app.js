@@ -1133,7 +1133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     outputDirPath.textContent = state.currentOutputDirectory;
     outputDirPath.title = state.currentOutputDirectory;
   } catch (err) {
-    outputDirPath.textContent = 'C:\\MotionStudioRenders';
+    outputDirPath.textContent = 'C:\\Nara Motions';
   }
 
   // ==========================================================================

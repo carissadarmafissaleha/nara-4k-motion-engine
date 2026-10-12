@@ -84,7 +84,7 @@ app.on('window-all-closed', async () => {
 // IPC Handler: Default Output Directory
 ipcMain.handle('system:getDefaultOutputDir', () => {
   const userVideos = app.getPath('videos') || app.getPath('documents');
-  const defaultDir = path.join(userVideos, 'MotionStudioRenders');
+  const defaultDir = path.join(userVideos, 'Nara Motions');
   if (!fs.existsSync(defaultDir)) {
     try {
       fs.mkdirSync(defaultDir, { recursive: true });
