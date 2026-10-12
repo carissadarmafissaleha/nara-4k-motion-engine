@@ -8,6 +8,17 @@ const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
+function safeExistsSync(targetPath) {
+  if (typeof targetPath !== 'string' || !targetPath.trim()) {
+    return false;
+  }
+  try {
+    return fs.existsSync(targetPath);
+  } catch (e) {
+    return false;
+  }
+}
+
 /**
  * Determine FFmpeg binary executable path
  * Prioritizes ffmpeg-static, falls back to common system locations
@@ -15,8 +26,9 @@ const puppeteer = require('puppeteer');
 function resolveFfmpegPath() {
   try {
     const staticFfmpeg = require('ffmpeg-static');
-    if (staticFfmpeg && fs.existsSync(staticFfmpeg)) {
-      return staticFfmpeg;
+    const ffmpegPathStr = typeof staticFfmpeg === 'string' ? staticFfmpeg : (staticFfmpeg && typeof staticFfmpeg.default === 'string' ? staticFfmpeg.default : null);
+    if (safeExistsSync(ffmpegPathStr)) {
+      return ffmpegPathStr;
     }
   } catch (e) {
     // ignore
@@ -30,7 +42,7 @@ function resolveFfmpegPath() {
   ];
 
   for (const p of commonWinPaths) {
-    if (p && fs.existsSync(p)) return p;
+    if (safeExistsSync(p)) return p;
   }
 
   return 'ffmpeg'; // system PATH fallback
@@ -41,9 +53,11 @@ function resolveFfmpegPath() {
  */
 function resolveBrowserExecutable() {
   try {
-    const defaultPuppeteer = puppeteer.executablePath();
-    if (defaultPuppeteer && fs.existsSync(defaultPuppeteer)) {
-      return defaultPuppeteer;
+    if (typeof puppeteer.executablePath === 'function') {
+      const ep = puppeteer.executablePath();
+      if (typeof ep === 'string' && safeExistsSync(ep)) {
+        return ep;
+      }
     }
   } catch (e) {
     // ignore
@@ -57,7 +71,7 @@ function resolveBrowserExecutable() {
   ];
 
   for (const b of systemBrowsers) {
-    if (fs.existsSync(b)) return b;
+    if (safeExistsSync(b)) return b;
   }
 
   return undefined;

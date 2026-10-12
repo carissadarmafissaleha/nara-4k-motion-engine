@@ -13,6 +13,17 @@ let mainWindow = null;
 let renderEngine = null;
 let isBatchRunning = false;
 
+function safeExistsSync(targetPath) {
+  if (typeof targetPath !== 'string' || !targetPath.trim()) {
+    return false;
+  }
+  try {
+    return fs.existsSync(targetPath);
+  } catch (e) {
+    return false;
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -85,7 +96,7 @@ app.on('window-all-closed', async () => {
 ipcMain.handle('system:getDefaultOutputDir', () => {
   const userVideos = app.getPath('videos') || app.getPath('documents');
   const defaultDir = path.join(userVideos, 'Nara Motions');
-  if (!fs.existsSync(defaultDir)) {
+  if (!safeExistsSync(defaultDir)) {
     try {
       fs.mkdirSync(defaultDir, { recursive: true });
     } catch (e) {}
@@ -95,7 +106,7 @@ ipcMain.handle('system:getDefaultOutputDir', () => {
 
 // IPC Handler: Open Folder in OS File Explorer
 ipcMain.handle('system:openFolder', async (event, folderPath) => {
-  if (!folderPath || !fs.existsSync(folderPath)) {
+  if (!folderPath || typeof folderPath !== 'string' || !safeExistsSync(folderPath)) {
     return { success: false, error: 'Path does not exist' };
   }
   await shell.openPath(folderPath);
@@ -170,12 +181,12 @@ ipcMain.handle('file:saveGeneratedAnimation', async (event, { filename, content 
     let outputDir;
     try {
       outputDir = path.join(process.cwd(), 'generated_animations');
-      if (!fs.existsSync(outputDir)) {
+      if (!safeExistsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
     } catch (errDir) {
       outputDir = path.join(app.getPath('userData'), 'generated_animations');
-      if (!fs.existsSync(outputDir)) {
+      if (!safeExistsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
     }

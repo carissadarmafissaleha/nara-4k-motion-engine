@@ -456,7 +456,7 @@ async function exportMetadataToCsv(exportDir, records) {
   await fs.promises.mkdir(exportDir, { recursive: true });
   const csvPath = path.join(exportDir, 'metadata_export.csv');
 
-  const fileExists = fs.existsSync(csvPath);
+  const fileExists = typeof csvPath === 'string' && fs.existsSync(csvPath);
   let existingContent = '';
   let previousRowCount = 0;
 
