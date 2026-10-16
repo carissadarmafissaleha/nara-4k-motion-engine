@@ -80,17 +80,29 @@ function resolveBrowserExecutable() {
 /**
  * FFmpeg Preset Arguments Generator
  */
-function getFfmpegArgs(preset, fps, outputPath, metadata = {}) {
+function getFfmpegArgs(preset, fps, outputPath, metadata = {}, audioPath = null, audioOptions = {}) {
   const commonInput = [
     '-y',
     '-f', 'image2pipe',
     '-vcodec', 'png',
     '-r', String(fps),
-    '-i', '-',
-    '-sws_flags', 'spline+accurate_rnd+full_chroma_int+full_chroma_inp'
+    '-i', '-'
   ];
 
+  const hasAudio = Boolean(audioPath && safeExistsSync(audioPath));
+
+  if (hasAudio) {
+    // If seamless loop is active, loop the audio input stream to match full animation length
+    if (audioOptions.isSeamlessLoop) {
+      commonInput.push('-stream_loop', '-1');
+    }
+    commonInput.push('-i', audioPath);
+  }
+
+  commonInput.push('-sws_flags', 'spline+accurate_rnd+full_chroma_int+full_chroma_inp');
+
   let videoArgs = [];
+  let audioArgs = [];
 
   switch (preset) {
     case 'prores4444':
@@ -107,6 +119,14 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}) {
         '-color_trc', 'bt709',
         '-colorspace', 'bt709'
       ];
+      if (hasAudio) {
+        // Broadcast standard uncompressed PCM 24-bit 48kHz stereo
+        audioArgs = [
+          '-c:a', 'pcm_s24le',
+          '-ar', '48000',
+          '-af', 'apad'
+        ];
+      }
       break;
 
     case 'mp4_4k':
@@ -123,6 +143,14 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}) {
         '-color_range', 'tv',
         '-movflags', '+faststart'
       ];
+      if (hasAudio) {
+        audioArgs = [
+          '-c:a', 'aac',
+          '-b:a', '320k',
+          '-ar', '48000',
+          '-af', 'apad'
+        ];
+      }
       break;
 
     case 'mp4_sosmed':
@@ -140,7 +168,26 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}) {
         '-color_range', 'tv',
         '-movflags', '+faststart'
       ];
+      if (hasAudio) {
+        audioArgs = [
+          '-c:a', 'aac',
+          '-b:a', '256k',
+          '-ar', '48000',
+          '-af', 'apad'
+        ];
+      }
       break;
+  }
+
+  // Stream mapping and strict duration control when audio is present
+  const mapArgs = [];
+  const durationArgs = [];
+
+  if (hasAudio) {
+    mapArgs.push('-map', '0:v:0', '-map', '1:a:0?');
+    if (audioOptions.durationSec && audioOptions.durationSec > 0) {
+      durationArgs.push('-t', String(audioOptions.durationSec.toFixed(4)));
+    }
   }
 
   // =========================================================================
@@ -182,7 +229,15 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}) {
   metadataArgs.push('-metadata', 'artist=NARA Motion Studio');
   metadataArgs.push('-metadata', 'copyright=Commercial Stock License');
 
-  return [...commonInput, ...videoArgs, ...metadataArgs, outputPath];
+  return [
+    ...commonInput,
+    ...mapArgs,
+    ...videoArgs,
+    ...audioArgs,
+    ...durationArgs,
+    ...metadataArgs,
+    outputPath
+  ];
 }
 
 class RenderEngine {
@@ -276,13 +331,18 @@ class RenderEngine {
       totalFrames = 180,
       isSeamlessLoop = true,
       holdLastFrames = 0,
-      bgMode = 'checkerboard'
+      bgMode = 'checkerboard',
+      audioPath = null,
+      copyAudioToOutput = false
     } = config;
 
     const ffmpegPath = resolveFfmpegPath();
     onLog(`[Engine] Initializing render for: ${path.basename(htmlPath)}`);
     onLog(`[Engine] Target resolution: ${width}x${height} @ ${fps}fps`);
     onLog(`[Engine] Preset: ${preset} | Loop: ${isSeamlessLoop} | Hold: ${holdLastFrames} | BG: ${bgMode}`);
+    if (audioPath && safeExistsSync(audioPath)) {
+      onLog(`[Engine] Audio se-nama terdeteksi: ${path.basename(audioPath)} (Muxing ke video output)`);
+    }
     onLog(`[Engine] Using FFmpeg binary: ${ffmpegPath}`);
 
     // Ensure output directory exists
@@ -474,7 +534,11 @@ class RenderEngine {
     });
 
     // 6. Spawn FFmpeg Process
-    const ffmpegArgs = getFfmpegArgs(preset, fps, outputPath, config.metadata || {});
+    const videoDurationSec = totalFramesToRender / fps;
+    const ffmpegArgs = getFfmpegArgs(preset, fps, outputPath, config.metadata || {}, audioPath, {
+      isSeamlessLoop,
+      durationSec: videoDurationSec
+    });
     onLog(`[FFmpeg] Spawning: ${ffmpegPath} ${ffmpegArgs.join(' ')}`);
 
     const ffmpegProcess = spawn(ffmpegPath, ffmpegArgs, {
@@ -577,6 +641,20 @@ class RenderEngine {
 
       // Wait for FFmpeg process to complete encoding
       await ffmpegExitPromise;
+
+      // Optionally save a copy of the matching audio file with the same name in the output folder
+      if (copyAudioToOutput && audioPath && safeExistsSync(audioPath)) {
+        try {
+          const ext = path.extname(audioPath);
+          const outAudioName = `${path.basename(outputPath, path.extname(outputPath))}${ext}`;
+          const outAudioPath = path.join(path.dirname(outputPath), outAudioName);
+          await fs.promises.copyFile(audioPath, outAudioPath);
+          onLog(`[Engine] File audio se-nama berhasil disalin ke: ${outAudioName}`);
+        } catch (copyErr) {
+          onLog(`[Warning] Gagal menyalin file audio ke output: ${copyErr.message}`);
+        }
+      }
+
       onLog(`[Engine] Render completed successfully: ${outputPath}`);
     } catch (err) {
       if (!this.isCancelled) {

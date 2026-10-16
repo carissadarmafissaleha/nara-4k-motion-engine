@@ -88,8 +88,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       logDefaultsApplied: "[Config] Pengaturan default global diterapkan ke semua item.",
       logRenderCancelled: "[Engine] Batch rendering dibatalkan oleh pengguna.",
       alertSelectValidHtml: "Hanya file .html atau .htm yang didukung.",
-      tabQueueTitle: "Antrean Batch Render",
-      tabStudioTitle: "Studio Generator ✨",
+      tabQueueTitle: "Batch Queue",
+      tabStudioTitle: "Studio ✨",
       studioBadge: "PREMIUM 4K MOTION TEMPLATES",
       studioTitle: "Motion Graphics Studio Generator",
       studioSubtitle: "Pilih kategori gerak komersial, sesuaikan parameter, lalu preview langsung atau kirim ke antrean render 4K / ProRes 4444 Alpha.",
@@ -135,7 +135,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       logEngineFailed: "[Engine Error] Render gagal:",
       btnHideToTray: "Tray",
       btnHideToTrayTitle: "Sembunyikan ke System Tray (Tetap Berjalan di Background)",
-      logHiddenToTray: "[System] Aplikasi diminimalkan ke Tray & tetap aktif di background."
+      logHiddenToTray: "[System] Aplikasi diminimalkan ke Tray & tetap aktif di background.",
+      chkEnableAudioTitle: "Render Suara (Folder & Nama Sama)",
+      chkEnableAudioDesc: "Otomatis gabungkan file audio (.wav, .mp3, .m4a, .aac, dll.) ber-nama sama dari folder ke video",
+      chkCopyAudioTitle: "Simpan Salinan Audio di Folder Hasil",
+      chkCopyAudioDesc: "Salin juga file audio ke folder tujuan dengan nama video yang sama",
+      metaAudioFound: "Audio Terdeteksi:",
+      logAudioDetected: "[Audio] File audio terdeteksi:",
+      tabAiTitle: "AI Motion 🤖",
+      aiConfigHeading: "Koneksi AI Motion Engine",
+      aiProviderLabel: "AI Provider:",
+      aiModelLabel: "Model AI:",
+      aiApiKeyLabel: "API Key:",
+      btnSaveAiKey: "Simpan Key",
+      aiPromptHeading: "Blueprint & Konsep Visual Animasi",
+      aiInspirationLabel: "Inspirasi Cepat:",
+      aiThemeLabel: "Tema & Deskripsi Ide Animasi:",
+      aiDurationLabel: "Durasi Animasi (Detik):",
+      aiCalculatedFramesLabel: "Total Frames (@60fps):",
+      aiResolutionLabel: "Rasio & Resolusi:",
+      aiBgStyleLabel: "Latar Belakang (Alpha):",
+      aiLoopTitle: "Seamless 360° Circular Looping",
+      aiLoopDesc: "Menjamin frame terakhir menyatu sempurna kembali ke frame awal tanpa patah",
+      btnAiGenerate: "✨ Generate Animation with AI",
+      btnAiPreview: "Live Preview",
+      btnAiSaveHtml: "Simpan HTML",
+      btnAiQueueRender: "+ Antrean",
+      aiCodeDetailsSummary: "Inspeksi Kode HTML5 NARA yang Dihasilkan",
+      btnCopyAiCode: "Salin Kode",
+      logAiGenerating: "[AI Engine] Memulai sintesis animasi AI:",
+      logAiSuccess: "[AI Engine] Animasi berhasil disintesis oleh AI:",
+      logAiSaved: "[AI Engine] File animasi berhasil disimpan:"
     },
     en: {
       soundEnabled: "Sound: On",
@@ -207,8 +237,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       logDefaultsApplied: "[Config] Global default settings applied to all queue items.",
       logRenderCancelled: "[Engine] Batch rendering cancelled by user.",
       alertSelectValidHtml: "Only .html or .htm files are supported.",
-      tabQueueTitle: "Batch Render Queue",
-      tabStudioTitle: "Studio Generator ✨",
+      tabQueueTitle: "Batch Queue",
+      tabStudioTitle: "Studio ✨",
       studioBadge: "PREMIUM 4K MOTION TEMPLATES",
       studioTitle: "Motion Graphics Studio Generator",
       studioSubtitle: "Select commercial motion category, adjust parameters, preview live or queue for 4K / ProRes 4444 Alpha rendering.",
@@ -254,7 +284,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       logEngineFailed: "[Engine Error] Render failed:",
       btnHideToTray: "Tray",
       btnHideToTrayTitle: "Hide to System Tray (Keep Running in Background)",
-      logHiddenToTray: "[System] App minimized to System Tray & active in background."
+      logHiddenToTray: "[System] App minimized to System Tray & active in background.",
+      chkEnableAudioTitle: "Render Audio (Same Folder & Same Name)",
+      chkEnableAudioDesc: "Auto-detect and mux matching audio (.wav, .mp3, .m4a, .aac, etc.) into output video",
+      chkCopyAudioTitle: "Save Audio Copy to Output Folder",
+      chkCopyAudioDesc: "Also export matching audio file into destination folder with matching video name",
+      metaAudioFound: "Audio Detected:",
+      logAudioDetected: "[Audio] Matching audio detected:",
+      tabAiTitle: "AI Motion 🤖",
+      aiConfigHeading: "AI Motion Engine Connection",
+      aiProviderLabel: "AI Provider:",
+      aiModelLabel: "AI Model:",
+      aiApiKeyLabel: "API Key:",
+      btnSaveAiKey: "Save Key",
+      aiPromptHeading: "Motion Blueprint & Visual Concept",
+      aiInspirationLabel: "Quick Inspiration:",
+      aiThemeLabel: "Theme & Visual Motion Concept:",
+      aiDurationLabel: "Animation Duration (Seconds):",
+      aiCalculatedFramesLabel: "Total Frames (@60fps):",
+      aiResolutionLabel: "Ratio & Resolution:",
+      aiBgStyleLabel: "Background (Alpha):",
+      aiLoopTitle: "Seamless 360° Circular Looping",
+      aiLoopDesc: "Guarantees final frame matches frame 0 smoothly without seams",
+      btnAiGenerate: "✨ Generate Animation with AI",
+      btnAiPreview: "Live Preview",
+      btnAiSaveHtml: "Save HTML",
+      btnAiQueueRender: "+ Add to Queue",
+      aiCodeDetailsSummary: "Inspect Generated NARA HTML5 Code",
+      btnCopyAiCode: "Copy Code",
+      logAiGenerating: "[AI Engine] Starting animation synthesis for:",
+      logAiSuccess: "[AI Engine] Animation synthesized successfully:",
+      logAiSaved: "[AI Engine] Animation file saved successfully:"
     },
     ja: {
       soundEnabled: "通知音: オン",
@@ -1140,6 +1200,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnStudioSaveHtml = document.getElementById('btnStudioSaveHtml');
   const btnStudioGenerateQueue = document.getElementById('btnStudioGenerateQueue');
 
+  // AI Motion Studio Elements
+  const tabAiMode = document.getElementById('tabAiMode');
+  const viewAiContainer = document.getElementById('viewAiContainer');
+  const aiProviderSelect = document.getElementById('aiProviderSelect');
+  const aiModelSelect = document.getElementById('aiModelSelect');
+  const aiApiKeyInput = document.getElementById('aiApiKeyInput');
+  const btnToggleAiKeyVisibility = document.getElementById('btnToggleAiKeyVisibility');
+  const iconEyeOpen = document.getElementById('iconEyeOpen');
+  const btnSaveAiKey = document.getElementById('btnSaveAiKey');
+  const aiKeyStatusMessage = document.getElementById('aiKeyStatusMessage');
+  const aiGetApiKeyLink = document.getElementById('aiGetApiKeyLink');
+  const aiInspirationChips = document.getElementById('aiInspirationChips');
+  const aiThemePrompt = document.getElementById('aiThemePrompt');
+  const aiDurationInput = document.getElementById('aiDurationInput');
+  const aiCalculatedFrames = document.getElementById('aiCalculatedFrames');
+  const aiResolutionSelect = document.getElementById('aiResolutionSelect');
+  const aiBgStyleSelect = document.getElementById('aiBgStyleSelect');
+  const aiChkSeamlessLoop = document.getElementById('aiChkSeamlessLoop');
+  const aiStatusBar = document.getElementById('aiStatusBar');
+  const aiStatusText = document.getElementById('aiStatusText');
+  const btnAiGenerate = document.getElementById('btnAiGenerate');
+  const btnAiPreview = document.getElementById('btnAiPreview');
+  const btnAiSaveHtml = document.getElementById('btnAiSaveHtml');
+  const btnAiQueueRender = document.getElementById('btnAiQueueRender');
+  const aiCodeDetails = document.getElementById('aiCodeDetails');
+  const btnCopyAiCode = document.getElementById('btnCopyAiCode');
+  const btnSelectAiAssets = document.getElementById('btnSelectAiAssets');
+  const aiAssetFileInput = document.getElementById('aiAssetFileInput');
+  const aiAssetDropZone = document.getElementById('aiAssetDropZone');
+  const aiAttachedAssetsList = document.getElementById('aiAttachedAssetsList');
+
   // Queue & Global Controls
   const dropZone = document.getElementById('dropZone');
   const btnBrowseFiles = document.getElementById('btnBrowseFiles');
@@ -1155,6 +1246,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   const selectFps = document.getElementById('selectFps');
   const outputDirPath = document.getElementById('outputDirPath');
   const btnChangeOutputDir = document.getElementById('btnChangeOutputDir');
+  const chkEnableMatchingAudio = document.getElementById('chkEnableMatchingAudio');
+  const chkCopyAudioToOutput = document.getElementById('chkCopyAudioToOutput');
+
+  // Per-Video Detected Audio Info Box
+  const metaAudioBox = document.getElementById('metaAudioBox');
+  const metaAudioFilename = document.getElementById('metaAudioFilename');
+
+  // Preview Synchronized Audio
+  let previewAudio = null;
+
+  function updatePreviewAudio(audioPath) {
+    if (previewAudio) {
+      try {
+        previewAudio.pause();
+        previewAudio.src = '';
+        previewAudio = null;
+      } catch (e) {}
+    }
+
+    if (audioPath) {
+      try {
+        const audioUrl = `file://${audioPath.replace(/\\/g, '/')}`;
+        previewAudio = new Audio(audioUrl);
+        previewAudio.volume = 0.85;
+      } catch (e) {
+        console.warn('Could not init preview audio:', e);
+      }
+    }
+  }
 
   // Execution
   const btnStartRender = document.getElementById('btnStartRender');
@@ -1975,6 +2095,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     updatePreviewAspectRatio(item.metadata.width || 3840, item.metadata.height || 2160);
     loadActiveVideoToEditor(index);
 
+    // Update detected audio info and preview audio
+    if (metaAudioBox && metaAudioFilename) {
+      if (item.audioPath) {
+        metaAudioBox.style.display = 'flex';
+        metaAudioFilename.textContent = item.audioFilename || 'audio file';
+      } else {
+        metaAudioBox.style.display = 'none';
+      }
+    }
+    updatePreviewAudio(item.audioPath || null);
+
     frameScrubber.disabled = false;
     btnPlayPause.disabled = false;
     btnRestart.disabled = false;
@@ -2020,6 +2151,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (e) {}
     }
 
+    // Synchronize preview audio playback position
+    if (previewAudio) {
+      const targetAudioTime = tickFrame / state.fps;
+      if (Math.abs(previewAudio.currentTime - targetAudioTime) > 0.15) {
+        try {
+          previewAudio.currentTime = targetAudioTime;
+        } catch (e) {}
+      }
+    }
+
     updatePlaybackDisplay();
   }
 
@@ -2060,9 +2201,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       let nextFrame = state.currentFrame + 1;
       if (nextFrame >= totalPlaybackFrames) {
         nextFrame = 0; // Wrap around for preview
+        if (previewAudio) {
+          try {
+            previewAudio.currentTime = 0;
+            if (state.isPlaying) previewAudio.play().catch(() => {});
+          } catch (e) {}
+        }
       }
       seekToFrame(nextFrame);
     }, intervalMs);
+
+    if (previewAudio) {
+      try {
+        previewAudio.currentTime = state.currentFrame / state.fps;
+        previewAudio.play().catch(() => {});
+      } catch (e) {}
+    }
   }
 
   function pausePlayback() {
@@ -2070,6 +2224,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     iconPlay.style.display = 'block';
     iconPause.style.display = 'none';
     playbackDot.style.backgroundColor = 'var(--text-muted)';
+    if (previewAudio) {
+      try {
+        previewAudio.pause();
+      } catch (e) {}
+    }
     if (state.playInterval) {
       clearInterval(state.playInterval);
       state.playInterval = null;
@@ -2240,6 +2399,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           id: `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
           filePath,
           filename: rawMeta.filename,
+          audioPath: rawMeta.audioPath || null,
+          audioFilename: rawMeta.audioFilename || null,
           metadata,
           status: 'pending',
           progress: 0,
@@ -2248,7 +2409,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         state.queue.push(item);
-        addTerminalLog('', 'info', 'logQueueAdded', `${metadata.filename} (${metadata.title || 'Untitled'})`);
+        if (rawMeta.audioPath) {
+          addTerminalLog('', 'info', 'logAudioDetected', `${rawMeta.filename} -> ${rawMeta.audioFilename}`);
+        } else {
+          addTerminalLog('', 'info', 'logQueueAdded', `${metadata.filename} (${metadata.title || 'Untitled'})`);
+        }
       } catch (err) {
         addTerminalLog(`[Error] Failed to read ${filePath}: ${err.message}`, 'error');
       }
@@ -2302,6 +2467,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="queue-file-title" title="${item.filePath}">${meta.title || item.filename}</div>
             <div class="queue-file-meta">
               <span>${item.filename}</span> • <span class="queue-duration-tag">${framesStr}</span>
+              ${item.audioPath ? `<span class="queue-audio-tag" title="File Audio: ${item.audioFilename}">🎵 ${item.audioFilename}</span>` : ''}
             </div>
           </div>
         </div>
@@ -2372,6 +2538,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateQueueDisplay();
     updatePlaybackDisplay();
     updateAlphaToggleVisibility();
+    updatePreviewAudio(null);
+    if (metaAudioBox) metaAudioBox.style.display = 'none';
   }
 
   // Clear Entire Queue Button
@@ -2471,6 +2639,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         return {
           filePath: item.filePath,
+          audioPath: item.audioPath || null,
+          audioFilename: item.audioFilename || null,
           width: meta.width || globalWidth,
           height: meta.height || globalHeight,
           fps,
@@ -2493,7 +2663,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         width: globalWidth,
         height: globalHeight,
         fps: globalFps,
-        bgMode: state.activeBgMode || 'checkerboard'
+        bgMode: state.activeBgMode || 'checkerboard',
+        enableAudio: chkEnableMatchingAudio ? chkEnableMatchingAudio.checked : true,
+        copyAudioToOutput: chkCopyAudioToOutput ? chkCopyAudioToOutput.checked : false
       }
     };
 
@@ -3067,22 +3239,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
   }
 
-  // Bind Tab Mode Switcher
-  if (tabQueueMode && tabStudioMode) {
-    tabQueueMode.addEventListener('click', () => {
-      tabQueueMode.classList.add('active');
-      tabStudioMode.classList.remove('active');
-      viewQueueContainer.style.display = 'flex';
-      viewStudioContainer.style.display = 'none';
-    });
+  // Bind Tab Mode Switcher (Batch Queue, Studio Generator, AI Motion Studio)
+  function switchActiveTab(mode) {
+    if (tabQueueMode) tabQueueMode.classList.toggle('active', mode === 'queue');
+    if (tabStudioMode) tabStudioMode.classList.toggle('active', mode === 'studio');
+    if (tabAiMode) tabAiMode.classList.toggle('active', mode === 'ai');
 
-    tabStudioMode.addEventListener('click', () => {
-      tabStudioMode.classList.add('active');
-      tabQueueMode.classList.remove('active');
-      viewQueueContainer.style.display = 'none';
-      viewStudioContainer.style.display = 'flex';
+    if (viewQueueContainer) {
+      viewQueueContainer.classList.toggle('active', mode === 'queue');
+      viewQueueContainer.style.display = (mode === 'queue') ? 'flex' : 'none';
+    }
+    if (viewStudioContainer) {
+      viewStudioContainer.classList.toggle('active', mode === 'studio');
+      viewStudioContainer.style.display = (mode === 'studio') ? 'flex' : 'none';
+    }
+    if (viewAiContainer) {
+      viewAiContainer.classList.toggle('active', mode === 'ai');
+      viewAiContainer.style.display = (mode === 'ai') ? 'flex' : 'none';
+    }
+
+    if (mode === 'studio') {
       renderStudioCategoryForm();
-    });
+    }
+  }
+
+  if (tabQueueMode) {
+    tabQueueMode.addEventListener('click', () => switchActiveTab('queue'));
+  }
+  if (tabStudioMode) {
+    tabStudioMode.addEventListener('click', () => switchActiveTab('studio'));
+  }
+  if (tabAiMode) {
+    tabAiMode.addEventListener('click', () => switchActiveTab('ai'));
   }
 
   // Bind Category Cards
@@ -3234,6 +3422,572 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initial render of studio parameters
   renderStudioCategoryForm();
+
+  // --------------------------------------------------------------------------
+  // AI Motion Studio Integration
+  // --------------------------------------------------------------------------
+  let currentAiGeneratedHtml = '';
+  let currentAiMeta = null;
+
+  function extractMetadataFromHtmlString(htmlString) {
+    try {
+      const match = htmlString.match(/<!--\s*METADATA(?::)?\s*([\s\S]*?)\s*(?:METADATA\s*)?-->/i);
+      if (match && match[1]) {
+        const parsed = JSON.parse(match[1].trim());
+        return {
+          title: parsed.title || 'AI Synthesized Animation',
+          category: parsed.category || 'AI Motion Graphics',
+          description: parsed.description || '',
+          keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
+          fps: parseInt(parsed.fps, 10) || 60,
+          totalFrames: parseInt(parsed.total_frames || parsed.totalFrames, 10) || 180,
+          width: parseInt(parsed.width, 10) || 3840,
+          height: parseInt(parsed.height, 10) || 2160,
+          isSeamlessLoop: parsed.loop !== false
+        };
+      }
+    } catch (e) {
+      console.warn('[AI Metadata Parser] Failed to parse JSON metadata:', e);
+    }
+    return {
+      title: 'AI Synthesized Animation',
+      category: 'AI Motion Graphics',
+      description: 'NARA 4K Procedural Animation',
+      keywords: ['ai motion', 'procedural animation', '4k', 'commercial', 'loop'],
+      fps: 60,
+      totalFrames: 180,
+      width: 3840,
+      height: 2160,
+      isSeamlessLoop: true
+    };
+  }
+
+  function initAiMotionStudio() {
+    if (!window.AiMotionEngine) return;
+
+    const config = window.AiMotionEngine.getAiConfig();
+
+    // Set initial config into UI
+    if (aiProviderSelect) {
+      aiProviderSelect.value = config.provider || 'gemini';
+    }
+    if (aiApiKeyInput) {
+      aiApiKeyInput.value = config.apiKey || '';
+    }
+
+    async function updateAiModelOptions(provider, forceCheck = false) {
+      if (!aiModelSelect) return;
+      const key = (aiApiKeyInput ? aiApiKeyInput.value : '').trim();
+
+      // Update helper link for current provider
+      if (aiGetApiKeyLink) {
+        if (provider === 'gemini') {
+          aiGetApiKeyLink.href = 'https://aistudio.google.com/app/apikey';
+          aiGetApiKeyLink.textContent = 'Dapatkan Gemini API Key Gratis ↗';
+        } else if (provider === 'openai') {
+          aiGetApiKeyLink.href = 'https://platform.openai.com/api-keys';
+          aiGetApiKeyLink.textContent = 'Dapatkan OpenAI API Key ↗';
+        }
+      }
+
+      // If no API Key is provided, disable model dropdown and show hint
+      if (!key) {
+        aiModelSelect.disabled = true;
+        aiModelSelect.innerHTML = '<option value="">(Masukkan API Key untuk memuat model)</option>';
+        if (aiKeyStatusMessage) {
+          aiKeyStatusMessage.className = 'ai-key-status';
+          aiKeyStatusMessage.textContent = 'Masukkan API Key Anda untuk melihat daftar model yang aktif.';
+        }
+        if (btnAiGenerate) btnAiGenerate.disabled = true;
+        return;
+      }
+
+      // If API Key is present, dynamically fetch available models using that key
+      aiModelSelect.disabled = true;
+      aiModelSelect.innerHTML = '<option value="">Memeriksa API Key & memuat model...</option>';
+      if (aiKeyStatusMessage) {
+        aiKeyStatusMessage.className = 'ai-key-status';
+        aiKeyStatusMessage.textContent = 'Menghubungi AI server untuk memverifikasi API Key...';
+      }
+
+      try {
+        const res = await window.AiMotionEngine.fetchAvailableModels(provider, key);
+
+        if (res && res.success && Array.isArray(res.models) && res.models.length > 0) {
+          aiModelSelect.innerHTML = '';
+          const savedModel = config.model;
+          let matched = false;
+
+          res.models.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = m.label || m.id;
+            if (m.id === savedModel) matched = true;
+            aiModelSelect.appendChild(opt);
+          });
+
+          aiModelSelect.disabled = false;
+          if (matched && savedModel) {
+            aiModelSelect.value = savedModel;
+          } else {
+            aiModelSelect.value = res.models[0].id;
+          }
+
+          if (aiKeyStatusMessage) {
+            aiKeyStatusMessage.className = 'ai-key-status success';
+            aiKeyStatusMessage.textContent = `✓ API Key Aktif — ${res.models.length} model terdeteksi!`;
+          }
+          if (btnAiGenerate) btnAiGenerate.disabled = false;
+
+          window.AiMotionEngine.saveAiConfig({ provider, apiKey: key, model: aiModelSelect.value });
+        } else {
+          aiModelSelect.disabled = true;
+          aiModelSelect.innerHTML = '<option value="">(API Key Tidak Valid)</option>';
+          if (aiKeyStatusMessage) {
+            aiKeyStatusMessage.className = 'ai-key-status error';
+            aiKeyStatusMessage.textContent = `✗ ${res.error || 'API Key tidak valid atau tidak memiliki akses.'}`;
+          }
+          if (btnAiGenerate) btnAiGenerate.disabled = true;
+        }
+      } catch (err) {
+        aiModelSelect.disabled = true;
+        aiModelSelect.innerHTML = '<option value="">(Gagal Menghubungi Server)</option>';
+        if (aiKeyStatusMessage) {
+          aiKeyStatusMessage.className = 'ai-key-status error';
+          aiKeyStatusMessage.textContent = `✗ Koneksi gagal: ${err.message}`;
+        }
+        if (btnAiGenerate) btnAiGenerate.disabled = true;
+      }
+    }
+
+    // Initial check on load
+    updateAiModelOptions(config.provider || 'gemini');
+
+    // Provider change listener
+    if (aiProviderSelect) {
+      aiProviderSelect.addEventListener('change', () => {
+        const provider = aiProviderSelect.value;
+        updateAiModelOptions(provider, true);
+      });
+    }
+
+    // Model selection change
+    if (aiModelSelect) {
+      aiModelSelect.addEventListener('change', () => {
+        window.AiMotionEngine.saveAiConfig({ model: aiModelSelect.value });
+      });
+    }
+
+    // Toggle API Key visibility
+    if (btnToggleAiKeyVisibility && aiApiKeyInput) {
+      btnToggleAiKeyVisibility.addEventListener('click', () => {
+        const isPassword = aiApiKeyInput.type === 'password';
+        aiApiKeyInput.type = isPassword ? 'text' : 'password';
+        btnToggleAiKeyVisibility.title = isPassword ? 'Sembunyikan API Key' : 'Lihat API Key';
+      });
+    }
+
+    // Save Key button - verifies key and populates models strictly from provider
+    if (btnSaveAiKey && aiApiKeyInput) {
+      btnSaveAiKey.addEventListener('click', async () => {
+        const key = aiApiKeyInput.value.trim();
+        const provider = aiProviderSelect ? aiProviderSelect.value : 'gemini';
+        window.AiMotionEngine.saveAiConfig({ apiKey: key, provider });
+        await updateAiModelOptions(provider, true);
+      });
+    }
+
+    // Also auto-check when user finishes typing / pasting API Key
+    if (aiApiKeyInput) {
+      aiApiKeyInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (btnSaveAiKey) btnSaveAiKey.click();
+        }
+      });
+      aiApiKeyInput.addEventListener('change', () => {
+        const provider = aiProviderSelect ? aiProviderSelect.value : 'gemini';
+        updateAiModelOptions(provider, true);
+      });
+    }
+
+    // Duration change calculates total frames
+    if (aiDurationInput && aiCalculatedFrames) {
+      const updateFrames = () => {
+        const dur = parseFloat(aiDurationInput.value) || 3.0;
+        const total = Math.max(30, Math.round(dur * 60));
+        aiCalculatedFrames.value = `${total} F`;
+      };
+      aiDurationInput.addEventListener('input', updateFrames);
+      updateFrames();
+    }
+
+    // Populate Inspiration Chips
+    if (aiInspirationChips && window.AiMotionEngine.INSPIRATION_PROMPTS) {
+      aiInspirationChips.innerHTML = '';
+      window.AiMotionEngine.INSPIRATION_PROMPTS.forEach(chip => {
+        const chipBtn = document.createElement('button');
+        chipBtn.type = 'button';
+        chipBtn.className = 'ai-chip';
+        chipBtn.innerHTML = `<span>${chip.icon}</span> <span>${chip.title}</span>`;
+        chipBtn.addEventListener('click', () => {
+          aiInspirationChips.querySelectorAll('.ai-chip').forEach(c => c.classList.remove('active'));
+          chipBtn.classList.add('active');
+          if (aiThemePrompt) aiThemePrompt.value = chip.prompt;
+          if (aiDurationInput) {
+            aiDurationInput.value = chip.duration || 3.0;
+            const total = Math.round(chip.duration * 60);
+            if (aiCalculatedFrames) aiCalculatedFrames.value = `${total} F`;
+          }
+        });
+        aiInspirationChips.appendChild(chipBtn);
+      });
+    }
+
+    // Set default chip
+    if (aiThemePrompt && !aiThemePrompt.value) {
+      const firstChip = window.AiMotionEngine.INSPIRATION_PROMPTS[0];
+      if (firstChip) {
+        aiThemePrompt.value = firstChip.prompt;
+      }
+    }
+
+    // AI Attached Assets State
+    const attachedAiAssets = [];
+
+    function renderAttachedAiAssets() {
+      if (!aiAttachedAssetsList) return;
+      if (attachedAiAssets.length === 0) {
+        aiAttachedAssetsList.innerHTML = '';
+        aiAttachedAssetsList.style.display = 'none';
+        return;
+      }
+
+      aiAttachedAssetsList.style.display = 'flex';
+      aiAttachedAssetsList.innerHTML = '';
+
+      attachedAiAssets.forEach((asset, index) => {
+        const item = document.createElement('div');
+        item.className = 'ai-asset-item';
+
+        const sizeStr = asset.size ? (asset.size > 1024 * 1024 ? `${(asset.size / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(asset.size / 1024)} KB`) : '';
+
+        let visualEl = '';
+        if (asset.isImage && asset.dataUrl) {
+          visualEl = `<img src="${asset.dataUrl}" class="ai-asset-thumb" alt="${asset.name}">`;
+        } else {
+          visualEl = `<span class="ai-asset-icon">📄</span>`;
+        }
+
+        item.innerHTML = `
+          ${visualEl}
+          <span class="ai-asset-name" title="${asset.name}">${asset.name}</span>
+          ${sizeStr ? `<span class="ai-asset-size">(${sizeStr})</span>` : ''}
+          <button type="button" class="ai-asset-remove" title="Hapus aset" data-index="${index}">✕</button>
+        `;
+
+        item.querySelector('.ai-asset-remove').addEventListener('click', (e) => {
+          e.stopPropagation();
+          attachedAiAssets.splice(index, 1);
+          renderAttachedAiAssets();
+        });
+
+        aiAttachedAssetsList.appendChild(item);
+      });
+    }
+
+    // Asset selection via native Electron dialog or fallback HTML file input
+    if (btnSelectAiAssets) {
+      btnSelectAiAssets.addEventListener('click', async () => {
+        if (window.api && window.api.selectAiAssetFiles) {
+          try {
+            const files = await window.api.selectAiAssetFiles();
+            if (Array.isArray(files) && files.length > 0) {
+              files.forEach(f => {
+                if (!attachedAiAssets.some(existing => existing.name === f.name)) {
+                  attachedAiAssets.push(f);
+                }
+              });
+              renderAttachedAiAssets();
+              addTerminalLog(`[AI Studio] ${files.length} aset berhasil dilampirkan.`, 'info');
+            }
+          } catch (e) {
+            console.error('Error selecting AI assets via IPC:', e);
+          }
+        } else if (aiAssetFileInput) {
+          aiAssetFileInput.click();
+        }
+      });
+    }
+
+    // Dropzone click & drag-and-drop
+    if (aiAssetDropZone) {
+      aiAssetDropZone.addEventListener('click', () => {
+        if (btnSelectAiAssets) btnSelectAiAssets.click();
+      });
+
+      aiAssetDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        aiAssetDropZone.classList.add('dragover');
+      });
+
+      aiAssetDropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        aiAssetDropZone.classList.remove('dragover');
+      });
+
+      aiAssetDropZone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        aiAssetDropZone.classList.remove('dragover');
+
+        const files = Array.from(e.dataTransfer.files || []);
+        if (files.length === 0) return;
+
+        for (const file of files) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result;
+            const mime = file.type || 'application/octet-stream';
+            attachedAiAssets.push({
+              name: file.name,
+              path: file.path || file.name,
+              size: file.size,
+              mimeType: mime,
+              dataUrl: dataUrl,
+              isImage: mime.startsWith('image/'),
+              isAudio: mime.startsWith('audio/')
+            });
+            renderAttachedAiAssets();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // HTML input file fallback listener
+    if (aiAssetFileInput) {
+      aiAssetFileInput.addEventListener('change', () => {
+        const files = Array.from(aiAssetFileInput.files || []);
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            attachedAiAssets.push({
+              name: file.name,
+              path: file.path || file.name,
+              size: file.size,
+              mimeType: file.type || 'application/octet-stream',
+              dataUrl: reader.result,
+              isImage: (file.type || '').startsWith('image/'),
+              isAudio: (file.type || '').startsWith('audio/')
+            });
+            renderAttachedAiAssets();
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+    }
+
+    // Helper: set UI generating state
+    function setAiGeneratingState(isBusy, statusMessage = '') {
+      if (btnAiGenerate) btnAiGenerate.disabled = isBusy;
+      if (aiStatusBar) aiStatusBar.style.display = isBusy ? 'flex' : 'none';
+      if (aiStatusText) aiStatusText.textContent = statusMessage;
+    }
+
+    // Generate with AI button
+    if (btnAiGenerate) {
+      btnAiGenerate.addEventListener('click', async () => {
+        try {
+          const provider = aiProviderSelect.value;
+          const apiKey = aiApiKeyInput.value.trim();
+          const model = aiModelSelect.value;
+          const theme = (aiThemePrompt.value || '').trim();
+          const durationSeconds = parseFloat(aiDurationInput.value) || 3.0;
+          const [widthStr, heightStr] = (aiResolutionSelect.value || '3840x2160').split('x');
+          const width = parseInt(widthStr, 10) || 3840;
+          const height = parseInt(heightStr, 10) || 2160;
+          const backgroundStyle = aiBgStyleSelect.value || 'dark';
+          const isLoop = aiChkSeamlessLoop ? aiChkSeamlessLoop.checked : true;
+
+          if (!apiKey) {
+            if (aiKeyStatusMessage) {
+              aiKeyStatusMessage.className = 'ai-key-status error';
+              aiKeyStatusMessage.textContent = 'Harap masukkan API Key Anda terlebih dahulu!';
+            }
+            aiApiKeyInput.focus();
+            return;
+          }
+
+          if (!theme) {
+            alert('Harap masukkan tema atau deskripsi ide animasi.');
+            aiThemePrompt.focus();
+            return;
+          }
+
+          // Auto-save key if user typed it
+          window.AiMotionEngine.saveAiConfig({ apiKey, provider, model });
+
+          setAiGeneratingState(true, 'Menghubungi AI Engine...');
+          addTerminalLog('', 'info', 'logAiGenerating', `${theme.substring(0, 60)}... (${durationSeconds}s)`);
+
+          const result = await window.AiMotionEngine.generateAiMotion({
+            provider,
+            apiKey,
+            model,
+            theme,
+            durationSeconds,
+            fps: 60,
+            width,
+            height,
+            backgroundStyle,
+            isLoop,
+            assets: attachedAiAssets
+          }, (stepText) => {
+            if (aiStatusText) aiStatusText.textContent = stepText;
+          });
+
+          if (!result || !result.html) {
+            throw new Error('Tidak ada kode HTML yang dihasilkan oleh model.');
+          }
+
+          currentAiGeneratedHtml = result.html;
+          currentAiMeta = extractMetadataFromHtmlString(result.html);
+
+          // Update Code Details Inspector
+          if (aiGeneratedCodeBlock) {
+            aiGeneratedCodeBlock.textContent = result.html;
+          }
+          if (aiCodeDetails) {
+            aiCodeDetails.style.display = 'block';
+          }
+
+          // Enable preview & save & queue buttons
+          if (btnAiPreview) btnAiPreview.disabled = false;
+          if (btnAiSaveHtml) btnAiSaveHtml.disabled = false;
+          if (btnAiQueueRender) btnAiQueueRender.disabled = false;
+
+          // Automatically push to Live Preview sandbox
+          loadStudioGeneratedPreview(currentAiGeneratedHtml, currentAiMeta);
+
+          addTerminalLog('', 'success', 'logAiSuccess', `${currentAiMeta.title} (${currentAiMeta.totalFrames} frames)`);
+        } catch (err) {
+          console.error('[NARA AI Error]', err);
+          addTerminalLog(`[AI Engine Error] ${err.message}`, 'error');
+          alert(`Gagal membuat animasi: ${err.message}`);
+        } finally {
+          setAiGeneratingState(false);
+        }
+      });
+    }
+
+    // Preview Button
+    if (btnAiPreview) {
+      btnAiPreview.addEventListener('click', () => {
+        if (!currentAiGeneratedHtml) return;
+        loadStudioGeneratedPreview(currentAiGeneratedHtml, currentAiMeta);
+        addTerminalLog('', 'info', 'logStudioPreview', `${currentAiMeta.title}`);
+      });
+    }
+
+    // Save HTML Button
+    if (btnAiSaveHtml) {
+      btnAiSaveHtml.addEventListener('click', async () => {
+        if (!currentAiGeneratedHtml) return;
+        const defaultFilename = `ai_${(currentAiMeta.title || 'motion').toLowerCase().replace(/[^a-z0-9_-]/gi, '_')}.html`;
+
+        if (window.api && typeof window.api.saveHtmlWithDialog === 'function') {
+          const res = await window.api.saveHtmlWithDialog({
+            defaultFilename,
+            content: currentAiGeneratedHtml
+          });
+          if (res && res.success) {
+            addTerminalLog('', 'success', 'logAiSaved', res.filePath);
+            return;
+          } else if (res && res.canceled) {
+            return;
+          }
+        }
+
+        // Fallback Blob download
+        const blob = new Blob([currentAiGeneratedHtml], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = defaultFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        addTerminalLog('', 'success', 'logAiSaved', `${defaultFilename} (Download)`);
+      });
+    }
+
+    // Queue for 4K Render Button
+    if (btnAiQueueRender) {
+      btnAiQueueRender.addEventListener('click', async () => {
+        if (!currentAiGeneratedHtml) return;
+        try {
+          btnAiQueueRender.disabled = true;
+          const cleanTitle = (currentAiMeta.title || 'ai_motion').replace(/[^a-z0-9_-]/gi, '_');
+          const filename = `${cleanTitle}_${Date.now()}.html`;
+
+          let targetFilePath = '';
+          if (window.api && typeof window.api.saveGeneratedAnimation === 'function') {
+            const saveRes = await window.api.saveGeneratedAnimation({
+              filename,
+              content: currentAiGeneratedHtml
+            });
+            if (!saveRes || !saveRes.success) {
+              throw new Error((saveRes && saveRes.error) || 'Gagal menyimpan file animasi ke cache studio.');
+            }
+            targetFilePath = saveRes.filePath;
+          } else {
+            const blob = new Blob([currentAiGeneratedHtml], { type: 'text/html;charset=utf-8' });
+            targetFilePath = URL.createObjectURL(blob);
+          }
+
+          // Add to Queue
+          await addFilesToQueue([targetFilePath]);
+
+          // Switch to Queue Tab
+          if (tabQueueMode) {
+            tabQueueMode.click();
+          }
+
+          // Select newly queued item
+          if (state.queue.length > 0) {
+            loadPreviewFile(state.queue.length - 1);
+          }
+
+          addTerminalLog('', 'success', 'logStudioGenerated', filename);
+        } catch (err) {
+          addTerminalLog(`[AI Queue Error] ${err.message}`, 'error');
+        } finally {
+          btnAiQueueRender.disabled = false;
+        }
+      });
+    }
+
+    // Copy Generated Code Button
+    if (btnCopyAiCode && aiGeneratedCodeBlock) {
+      btnCopyAiCode.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(aiGeneratedCodeBlock.textContent);
+          const origText = btnCopyAiCode.textContent;
+          btnCopyAiCode.textContent = '✓ Tersalin!';
+          setTimeout(() => { btnCopyAiCode.textContent = origText; }, 2000);
+        } catch (e) {
+          console.error('Clipboard copy error:', e);
+        }
+      });
+    }
+  }
+
+  // Initial call for AI Motion Studio
+  initAiMotionStudio();
 
   function finishRenderUI() {
     state.isRendering = false;

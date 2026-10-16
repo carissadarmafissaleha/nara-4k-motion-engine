@@ -7,7 +7,7 @@ const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, nativeImage } = 
 const path = require('path');
 const fs = require('fs');
 const { RenderEngine } = require('./engine/render-engine');
-const { parseHtmlMetadata, enrichMetadata, exportMetadataToCsv } = require('./engine/metadata-parser');
+const { parseHtmlMetadata, enrichMetadata, exportMetadataToCsv, findMatchingAudioFile } = require('./engine/metadata-parser');
 
 // Prevent background timer throttling when running hidden in tray
 app.commandLine.appendSwitch('disable-background-timer-throttling');
@@ -331,6 +331,61 @@ ipcMain.handle('dialog:selectHtmlFiles', async () => {
   return result.canceled ? [] : result.filePaths;
 });
 
+// IPC Handler: Select Assets/Images/SVG for AI Motion Generator
+ipcMain.handle('dialog:selectAiAssetFiles', async () => {
+  if (!mainWindow) return [];
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Pilih File Aset / Gambar / Logo untuk AI Motion',
+    properties: ['openFile', 'multiSelections'],
+    filters: [
+      { name: 'Visual Assets & Images', extensions: ['png', 'jpg', 'jpeg', 'svg', 'webp', 'gif'] },
+      { name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'm4a', 'aac'] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  });
+  if (result.canceled || !result.filePaths.length) return [];
+
+  const loadedAssets = [];
+  for (const filePath of result.filePaths) {
+    try {
+      const ext = path.extname(filePath).toLowerCase();
+      const filename = path.basename(filePath);
+      const stat = await fs.promises.stat(filePath);
+
+      // Read small/medium files into base64 Data URL (limit ~12MB for browser safety)
+      if (stat.size <= 12 * 1024 * 1024) {
+        const buffer = await fs.promises.readFile(filePath);
+        let mime = 'application/octet-stream';
+        if (ext === '.png') mime = 'image/png';
+        else if (ext === '.jpg' || ext === '.jpeg') mime = 'image/jpeg';
+        else if (ext === '.svg') mime = 'image/svg+xml';
+        else if (ext === '.webp') mime = 'image/webp';
+        else if (ext === '.gif') mime = 'image/gif';
+        else if (ext === '.mp3') mime = 'audio/mp3';
+        else if (ext === '.wav') mime = 'audio/wav';
+
+        const base64 = buffer.toString('base64');
+        const dataUrl = `data:${mime};base64,${base64}`;
+
+        loadedAssets.push({
+          name: filename,
+          path: filePath,
+          size: stat.size,
+          extension: ext,
+          mimeType: mime,
+          dataUrl: dataUrl,
+          isImage: mime.startsWith('image/'),
+          isAudio: mime.startsWith('audio/')
+        });
+      }
+    } catch (e) {
+      console.warn('Failed reading asset file:', filePath, e.message);
+    }
+  }
+
+  return loadedAssets;
+});
+
 // IPC Handler: Directory Picker Dialog
 ipcMain.handle('dialog:selectHtmlDirectory', async () => {
   if (!mainWindow) return [];
@@ -547,7 +602,23 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
         keywords: userKeywords
       };
 
-      // 2. Execute render with In-File Metadata Embedding permanently in container
+      // 2. Auto-detect matching audio in same folder with same name
+      const enableAudio = settings.enableAudio !== false;
+      let matchedAudioPath = null;
+      if (enableAudio) {
+        if (item.audioPath && safeExistsSync(item.audioPath)) {
+          matchedAudioPath = item.audioPath;
+        } else if (typeof findMatchingAudioFile === 'function') {
+          const detected = findMatchingAudioFile(item.filePath);
+          if (detected) matchedAudioPath = detected.path;
+        }
+      }
+
+      if (matchedAudioPath && mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('render:log', `[Audio] File audio se-nama terdeteksi: ${path.basename(matchedAudioPath)}`);
+      }
+
+      // 3. Execute render with In-File Metadata Embedding permanently in container
       const renderResult = await renderEngine.renderAnimation(
         {
           htmlPath: item.filePath,
@@ -560,7 +631,9 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
           isSeamlessLoop,
           holdLastFrames,
           bgMode,
-          metadata: mergedMeta
+          metadata: mergedMeta,
+          audioPath: matchedAudioPath,
+          copyAudioToOutput: Boolean(settings.copyAudioToOutput)
         },
         (progress) => {
           if (tray && progress && typeof progress.percent === 'number') {

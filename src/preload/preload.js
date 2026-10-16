@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('api', {
   selectHtmlFiles: () => ipcRenderer.invoke('dialog:selectHtmlFiles'),
   selectHtmlDirectory: () => ipcRenderer.invoke('dialog:selectHtmlDirectory'),
   selectOutputDirectory: () => ipcRenderer.invoke('dialog:selectOutputDirectory'),
+  selectAiAssetFiles: () => ipcRenderer.invoke('dialog:selectAiAssetFiles'),
   getDefaultOutputDir: () => ipcRenderer.invoke('system:getDefaultOutputDir'),
 
   // Metadata & File loading

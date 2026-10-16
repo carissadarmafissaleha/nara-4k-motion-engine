@@ -21,6 +21,45 @@ function filenameToTitle(filename) {
 }
 
 /**
+ * Detect matching audio file in the same directory with the same base name
+ * Supported formats: .wav, .mp3, .m4a, .aac, .ogg, .flac, .opus, .aiff, .wma
+ * @param {string} filePath - Path to HTML animation
+ * @returns {{ path: string, filename: string } | null}
+ */
+function findMatchingAudioFile(filePath) {
+  if (!filePath || typeof filePath !== 'string') return null;
+  try {
+    const dir = path.dirname(filePath);
+    const baseName = path.basename(filePath, path.extname(filePath));
+    const audioExtensions = [
+      '.wav',
+      '.mp3',
+      '.m4a',
+      '.aac',
+      '.ogg',
+      '.flac',
+      '.opus',
+      '.aif',
+      '.aiff',
+      '.wma'
+    ];
+
+    for (const ext of audioExtensions) {
+      const candidate = path.join(dir, `${baseName}${ext}`);
+      if (fs.existsSync(candidate)) {
+        return {
+          path: candidate,
+          filename: `${baseName}${ext}`
+        };
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return null;
+}
+
+/**
  * Parse key="value" pairs from a string (e.g., from comment metadata)
  * @param {string} text 
  * @returns {Record<string, string>}
@@ -343,9 +382,15 @@ async function parseHtmlMetadata(filePath, content = null) {
       result.title = filenameToTitle(filePath);
     }
 
+    // 8. Auto-detect matching audio file in the same folder with the same name
+    const audioInfo = findMatchingAudioFile(filePath);
+    result.audioPath = audioInfo ? audioInfo.path : null;
+    result.audioFilename = audioInfo ? audioInfo.filename : null;
+
     return result;
   } catch (error) {
     console.error(`Failed to parse metadata from ${filePath}:`, error);
+    const fallbackAudio = findMatchingAudioFile(filePath);
     return {
       filePath,
       filename: path.basename(filePath),
@@ -358,7 +403,9 @@ async function parseHtmlMetadata(filePath, content = null) {
       width: null,
       height: null,
       loop: null,
-      holdLastFrames: 0
+      holdLastFrames: 0,
+      audioPath: fallbackAudio ? fallbackAudio.path : null,
+      audioFilename: fallbackAudio ? fallbackAudio.filename : null
     };
   }
 }
@@ -505,5 +552,6 @@ module.exports = {
   parseHtmlMetadata,
   enrichMetadata,
   exportMetadataToCsv,
-  filenameToTitle
+  filenameToTitle,
+  findMatchingAudioFile
 };

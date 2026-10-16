@@ -6,10 +6,13 @@
 [![Windows Portable](https://img.shields.io/badge/Windows-Portable%20EXE%20Ready-zinc.svg?style=flat-square)](#-langkah-4-opsional-cara-build-file-exe-portabel-untuk-windows-single-portable-executable)
 [![Node.js Version](https://img.shields.io/badge/Node.js-18%20%7C%2020%20%7C%2022%20LTS-zinc.svg?style=flat-square)](https://nodejs.org)
 [![Electron](https://img.shields.io/badge/Electron-39.x-zinc.svg?style=flat-square)](https://www.electronjs.org/)
-[![Microstock Ready](https://img.shields.io/badge/Microstock-Adobe%20Stock%20%7C%20Shutterstock-zinc.svg?style=flat-square)](#-fitur-auto-metadata-csv--in-file-metadata-)
+[![Microstock Ready](https://img.shields.io/badge/Microstock-Adobe%20Stock%20%7C%20Shutterstock-zinc.svg?style=flat-square)](#5-fitur-auto-metadata-csv--in-file-metadata-)
+[![Audio Muxing](https://img.shields.io/badge/Audio-Auto--Detect%20%26%20Render-zinc.svg?style=flat-square)](#6-fitur-auto-deteksi--render-suara-folder--nama-sama-)
+[![System Tray](https://img.shields.io/badge/System%20Tray-Background%20Render-zinc.svg?style=flat-square)](#7-fitur-system-tray--background-render-engine-hide-on-tray-)
+[![AI Generator](https://img.shields.io/badge/AI%20Generator-Gemini%20%7C%20OpenAI-blueviolet.svg?style=flat-square)](#8-fitur-generate-with-ai-ai-motion-studio-)
 [![Theme](https://img.shields.io/badge/Theme-Dark%20%7C%20Light%20Mode-zinc.svg?style=flat-square)](#2-live-preview--timeline-player)
 
-> ⚡ **High-performance desktop offline engine to render HTML5/Canvas/WebGL animations into 4K MP4 & Apple ProRes 4444 Alpha MOV with zero temp files, embedded stock metadata, safe-append CSV, and browser companion extension.**
+> ⚡ **High-performance desktop offline engine to render HTML5/Canvas/WebGL animations into 4K MP4 & Apple ProRes 4444 Alpha MOV with zero temp files, auto-detect audio muxing, system tray background rendering, embedded stock metadata, safe-append CSV, and browser companion extension.**
 
 <p align="center">
   <a href="https://github.com/carissadarmafissaleha/nara-4k-motion-engine/blob/main/screenshoot/Screenshot%201.png">
@@ -281,7 +284,87 @@ _Contoh Perhitungan:_
 
 ---
 
-### 6. NARA Companion - Browser Extension 🌐
+### 6. Fitur Auto-Deteksi & Render Suara (Folder & Nama Sama) 🎵
+
+NARA mendukung integrasi audio otomatis untuk proyek animasi motion graphics komersial yang memiliki musik latar belakang (_background music_) atau efek suara (_sound effects/SFX_):
+
+- **Auto-Detection Cerdas**:
+  - Saat Anda menambahkan file animasi `.html` (misal `intro-promo.html`) ke antrean render, NARA secara otomatis memindai folder yang sama untuk mencari file audio dengan nama dasar yang sama (misal `intro-promo.wav` atau `intro-promo.mp3`).
+  - **Format Audio yang Didukung**: `.wav`, `.mp3`, `.m4a`, `.aac`, `.ogg`, `.flac`, `.opus`, `.aiff`, `.wma`.
+- **Indikator Visual di Antrean & Metadata Editor**:
+  - Muncul badge hijau `🎵 nama_file.mp3` pada kartu antrean render batch.
+  - Panel Metadata Editor menampilkan kotak status audio yang terdeteksi secara real-time saat file dipilih.
+- **Audio Sinkron di Live Preview Player**:
+  - Saat memutar (_Play/Pause_) atau melakukan _scrubbing_ timeline di player preview, audio otomatis berbunyi secara sinkron dengan frame animasi.
+- **Mastering Audio Berkualitas Tinggi lewat FFmpeg**:
+  - **MP4 (4K / 1080p)**: Audio di-muxing menggunakan codec **AAC 320 kbps, 48 kHz stereo**.
+  - **MOV ProRes 4444 Alpha**: Audio di-encode menggunakan standar industri broadcast **Uncompressed PCM 24-bit 48 kHz stereo** (`pcm_s24le`), siap diterima tanpa re-encoding di Adobe Stock, Shutterstock, Pond5, DaVinci Resolve, dan Final Cut Pro.
+- **Seamless Looping Audio**:
+  - Jika opsi _Seamless Loop_ aktif, stream audio otomatis di-looping (`-stream_loop -1`) agar mengalun mulus sepanjang durasi video tanpa terputus di tengah jalan.
+- **Sinkronisasi Durasi Presisi (Anti-Freeze & Anti-Desync)**:
+  - Durasi audio dipotong persis pada frame terakhir video (`-t`), dan jika file audio lebih pendek dari durasi animasi, filter `-af apad` otomatis mengisi jeda akhir dengan silence agar video tidak berhenti mendadak atau _corrupt_.
+- **Opsi Ekspor Fleksibel di Panel Konfigurasi**:
+  - `Render Suara (Folder & Nama Sama)`: Sakelar utama untuk mengaktifkan/menonaktifkan penggabungan audio ke video (aktif secara default).
+  - `Simpan Salinan Audio di Folder Hasil`: Opsi untuk menduplikasi/mengekspor file audio mandiri berdampingan dengan video hasil render di folder tujuan.
+
+---
+
+### 7. Fitur System Tray & Background Render Engine (Hide on Tray) 📥
+
+Render batch puluhan hingga ratusan video 4K kini dapat berjalan tenang di latar belakang tanpa mengganggu alur kerja atau memenuhi taskbar Anda:
+
+- **Ikon System Tray Interaktif**:
+  - Ikon NARA hadir di area notifikasi Windows/OS tray dengan tooltip interaktif yang menampilkan status dan persentase render secara langsung (misal: `NARA [65%] (3/10): kinetic_promo`).
+- **Menu Cepat Klik Kanan (Tray Context Menu)**:
+  - **Header Info & Status**: Menampilkan status real-time (`Siap / Idle`, `Merender X/Y - File`, `Selesai`, `Dibatalkan`).
+  - **Buka NARA Studio / Sembunyikan ke Tray**: Beralih tampilan jendela dengan 1 klik.
+  - **Buka Folder Hasil**: Membuka folder output video langsung di Windows Explorer.
+  - **Keluar dari NARA**: Menghentikan proses render dengan aman dan menutup aplikasi sepenuhnya.
+- **Kontrol Klik Ikon Tray**:
+  - **Klik Satu Kali**: Toggle instan menyembunyikan atau menampilkan jendela aplikasi.
+  - **Klik Dua Kali**: Membuka dan memfokuskan jendela NARA ke depan layar.
+  - **Klik Notifikasi Balon**: Membuka jendela aplikasi saat notifikasi selesai diklik.
+- **Tombol "Hide to Tray" di Header UI**:
+  - Tombol ikon tray minimalis di header bar berdampingan dengan tombol tema dan suara, memungkinkan Anda menyembunyikan aplikasi ke tray kapan saja dengan satu sentuhan.
+- **Close to Tray (Jendela Aman Ditutup)**:
+  - Mengklik tombol **"X"** (tutup) pada jendela aplikasi tidak akan mematikan proses render; aplikasi otomatis diminimalkan ke System Tray dengan notifikasi balon informatif. Untuk keluar sepenuhnya, klik kanan ikon tray lalu pilih _Keluar dari NARA_.
+- **Anti-Throttling di Background**:
+  - Dilengkapi konfigurasi biner `backgroundThrottling: false` dan `--disable-background-timer-throttling` sehingga Chromium headless dan biner FFmpeg tetap merender pada performa dan kecepatan penuh 100% tanpa throttled saat jendela diminimalkan.
+- **Notifikasi Balon Otomatis Selesai**:
+  - Saat antrean batch render selesai di latar belakang, sistem tray otomatis menampilkan notifikasi balon yang memberitahukan total file yang berhasil diproses.
+
+---
+
+### 8. Fitur Generate with AI (AI Motion Studio) 🤖✨
+
+NARA kini terintegrasi dengan **AI Motion Synthesizer Engine** mutakhir yang memungkinkan kreator memproduksi motion graphics komersial kelas studio 4K hanya dengan menuliskan **tema visual** dan **durasi waktu**:
+
+- **Koneksi Multi-Provider AI (Google Gemini & OpenAI)**:
+  - **Google Gemini API** *(Rekomendasi)*: Menggunakan model `gemini-2.5-flash`, `gemini-1.5-flash`, atau `gemini-1.5-pro` dengan latensi ultra-cepat dan kemampuan sintesis Canvas 2D / WebGL yang sangat presisi. Link langsung disediakan di aplikasi untuk mendapatkan API Key Gemini gratis dari Google AI Studio.
+  - **OpenAI API**: Mendukung `gpt-4o-mini` dan `gpt-4o` dengan pemahaman konsep motion design mendalam.
+- **Penyimpanan API Key Aman di LocalStorage**:
+  - API Key disimpan secara lokal di perangkat Anda (`localStorage`) dan **tidak pernah dikirim ke server pihak ketiga mana pun**. Aplikasi berkomunikasi langsung dari aplikasi desktop ke endpoint resmi Google / OpenAI.
+- **100% Sesuai Arsitektur Standar NARA**:
+  - **Zero External Dependencies**: Menghasilkan kode HTML5 murni (Canvas 2D / WebGL / SVG) yang 100% mandiri tanpa library luar atau CDN internet, sehingga dapat dirender secara offline dan bebas crash.
+  - **Deterministic Virtual Clock**: Otomatis menyertakan hook `window.__renderTick(frameIndex, targetFps)` serta perhitungan trigonometri periodik sehingga animasi dapat di-scrub dan di-render frame demi frame tanpa patah (*seamless loop*).
+  - **Embedded JSON Metadata**: Dokumen otomatis dilengkapi header komentar `<!--METADATA { ... } METADATA-->` yang berisi judul komersial, deskripsi, keywords microstock, FPS, total frames, dan kategori.
+- **Inspirasi Cepat (Quick Inspiration Chips)**:
+  - Tersedia tombol inspirasi sekali klik untuk ide-ide motion graphics populer:
+    - ⚡ *Cyberpunk HUD* (Telemetry & Hologram)
+    - 🌌 *Quantum Particles* (Particle vortex gravitasi)
+    - 🌊 *Iridescent Waves* (Pita fluida 3D gradien)
+    - 📈 *FinTech Hologram* (Chart pasar saham real-time)
+    - 🧬 *DNA Nanotech* (Struktur molekul berputar)
+    - 💎 *Luxury Gold Flow* (Pita emas obsidian)
+    - 🧠 *Neural Network* (Jaringan sinaptik AI 3D)
+- **Tiga Alur Kerja Fleksibel**:
+  1. **Live Preview Sandbox**: Tinjau dan scrub animasi yang baru saja dibuat oleh AI seketika pada preview player NARA di sisi kiri layar.
+  2. **Simpan File .HTML**: Simpan kode animasi ke komputer sebagai berkas HTML standalone untuk diedit lebih lanjut atau dibagikan.
+  3. **Masukkan ke Antrean Render**: Simpan otomatis dan masukkan file langsung ke antrean batch render 4K ProRes 4444 Alpha atau MP4 Ultra HD!
+
+---
+
+### 9. NARA Companion - Browser Extension 🌐
 
 - **View hasil code seketika**: Tak perlu bolak-balik buka file atau menunggu render desktop. Langsung preview kode animasi dan download dari browser Anda (Google Chrome / Microsoft Edge / Brave).
 - **Fitur Utama Extension**:
@@ -299,7 +382,7 @@ _Contoh Perhitungan:_
 
 ---
 
-### 7. Multi-Bahasa Global (10 Bahasa - Default EN) & Log Terminal Reaktif
+### 10. Multi-Bahasa Global (10 Bahasa - Default EN) & Log Terminal Reaktif
 
 Pilih bahasa antarmuka secara instan melalui dropdown kode ID bahasa ringkas di bar navigasi atas (Default: **`EN`**). **Seluruh baris log streaming di konsol terminal bawah otomatis terlokalisasi dan berubah secara real-time saat bahasa diganti:**
 
@@ -316,13 +399,17 @@ Pilih bahasa antarmuka secara instan melalui dropdown kode ID bahasa ringkas di 
 
 ---
 
-## ⌨️ Pintasan Keyboard (Shortcuts)
+## ⌨️ Pintasan Keyboard & Kontrol Cepat (Shortcuts & Controls)
 
-| Tombol                 | Fungsi                                 |
-| ---------------------- | -------------------------------------- |
-| **`Spasi` (Spacebar)** | Play / Pause pemutaran animasi preview |
-| **`F`**                | Masuk / Keluar mode Fullscreen Preview |
-| **`ESC`**              | Keluar dari mode Fullscreen Preview    |
+| Tombol / Aksi              | Fungsi                                                       |
+| -------------------------- | ------------------------------------------------------------ |
+| **`Spasi` (Spacebar)**     | Play / Pause pemutaran animasi preview                       |
+| **`F`**                    | Masuk / Keluar mode Fullscreen Preview                       |
+| **`ESC`**                  | Keluar dari mode Fullscreen Preview                          |
+| **Tombol `Tray` (Header)** | Sembunyikan aplikasi ke System Tray (Background)             |
+| **Tombol `X` (Window)**    | Minimize to Tray (Rendering tetap berjalan di background)    |
+| **Klik Ikon Tray**         | Toggle sembunyikan / tampilkan jendela NARA Studio           |
+| **Klik 2× Ikon Tray**      | Buka dan fokuskan jendela NARA Studio                        |
 
 ---
 
@@ -343,18 +430,20 @@ motionjs/
 │   ├── cyberpunk-portal-loop.html
 │   └── quantum-logo-reveal-oneshot.html
 └── src/
+    ├── assets/                               # Aset ikon aplikasi & system tray (16x16, 48x48, 128x128)
     ├── main/
-    │   ├── main.js                           # Electron lifecycle & IPC handlers
+    │   ├── main.js                           # Electron lifecycle, System Tray, & IPC handlers
     │   └── engine/
-    │       ├── render-engine.js              # Streaming memory pipeline & FFmpeg pipe
-    │       └── metadata-parser.js            # Parser metadata HTML & CSV generator
+    │       ├── render-engine.js              # Streaming memory pipeline, Audio mixer & FFmpeg pipe
+    │       └── metadata-parser.js            # Parser metadata HTML, deteksi audio, & CSV generator
     ├── preload/
-    │   └── preload.js                        # ContextBridge secure IPC bridge
+    │   └── preload.js                        # ContextBridge secure IPC bridge (Tray & Window APIs)
     └── renderer/
-        ├── index.html                        # Struktur HTML antarmuka NARA
+        ├── index.html                        # Struktur HTML antarmuka NARA & kontrol audio/tray
         ├── style.css                         # Desain shadcn/ui Monochrome Zinc Architecture
-        ├── app.js                            # Controller utama & i18n
-        └── generators/                       # 6 Generator animasi komersial
+        ├── app.js                            # Controller utama, live preview audio sync, & i18n
+        └── generators/                       # Generator animasi komersial & AI Engine
+            ├── ai-generator.js               # AI Motion Synthesizer (Gemini & OpenAI API)
             ├── kinetic-typography.js
             ├── particle-fx.js
             ├── isometric-3d.js

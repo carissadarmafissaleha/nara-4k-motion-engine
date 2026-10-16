@@ -223,6 +223,15 @@
             <span class="meta-sync-hint" data-i18n="metaAutoSaved">Tersimpan otomatis per video</span>
           </div>
 
+          <!-- Per-Video Detected Audio Info -->
+          <div class="meta-audio-info-box" id="metaAudioBox" style="display: none;">
+            <div class="audio-header">
+              <span class="audio-icon">🎵</span>
+              <span class="audio-label" data-i18n="metaAudioFound">Audio Terdeteksi:</span>
+              <span class="audio-filename" id="metaAudioFilename">audio.mp3</span>
+            </div>
+          </div>
+
           <div class="meta-editor-form">
             <!-- Title -->
             <div class="meta-field-group">
@@ -308,8 +317,8 @@
         </div>
 
         <div class="panel-mode-tabs">
-          <button id="tabQueueMode" class="tab-btn active">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <button id="tabQueueMode" class="tab-btn active" title="Batch Render Queue">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="8" y1="6" x2="21" y2="6"></line>
               <line x1="8" y1="12" x2="21" y2="12"></line>
               <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -317,13 +326,19 @@
               <line x1="3" y1="12" x2="3.01" y2="12"></line>
               <line x1="3" y1="18" x2="3.01" y2="18"></line>
             </svg>
-            <span data-i18n="tabQueueTitle">Batch Render Queue</span>
+            <span data-i18n="tabQueueTitle">Batch Queue</span>
           </button>
-          <button id="tabStudioMode" class="tab-btn">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <button id="tabStudioMode" class="tab-btn" title="Motion Studio Generator">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
-            <span data-i18n="tabStudioTitle">Studio Generator ✨</span>
+            <span data-i18n="tabStudioTitle">Studio ✨</span>
+          </button>
+          <button id="tabAiMode" class="tab-btn" title="AI Motion Synthesizer">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+            </svg>
+            <span data-i18n="tabAiTitle">AI Motion 🤖</span>
           </button>
         </div>
 
@@ -396,6 +411,26 @@
                 <option value="24" data-i18n="fps24">24 FPS (Cinematic 24p)</option>
               </select>
             </div>
+          </div>
+
+          <!-- Audio Render Configuration -->
+          <div class="audio-settings-box">
+            <label class="custom-checkbox">
+              <input type="checkbox" id="chkEnableMatchingAudio" checked>
+              <span class="checkmark"></span>
+              <span class="checkbox-label-text">
+                <strong data-i18n="chkEnableAudioTitle">Render Suara (Folder & Nama Sama)</strong>
+                <small data-i18n="chkEnableAudioDesc">Otomatis deteksi dan gabungkan file audio (.wav, .mp3, .m4a, .aac, dll.) se-nama ke video</small>
+              </span>
+            </label>
+            <label class="custom-checkbox sub-checkbox" style="margin-top: 6px;">
+              <input type="checkbox" id="chkCopyAudioToOutput">
+              <span class="checkmark"></span>
+              <span class="checkbox-label-text">
+                <strong data-i18n="chkCopyAudioTitle">Simpan Salinan Audio di Folder Hasil</strong>
+                <small data-i18n="chkCopyAudioDesc">Salin juga file audio ke folder tujuan dengan nama video yang sama</small>
+              </span>
+            </label>
           </div>
 
           <!-- Output Directory Path Selector -->
@@ -605,6 +640,210 @@
           </div>
         </div> <!-- End of #viewStudioContainer -->
 
+        <!-- Tab View: AI Motion Studio -->
+        <div id="viewAiContainer" class="tab-view-content" style="display: none;">
+          <!-- AI Config Card: API Provider, Model & Key -->
+          <div class="studio-card ai-config-card">
+            <div class="studio-section-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
+                <rect x="4" y="8" width="16" height="12" rx="2"></rect>
+                <circle cx="9" cy="13" r="1.5"></circle>
+                <circle cx="15" cy="13" r="1.5"></circle>
+                <path d="M9 17h6"></path>
+              </svg>
+              <span data-i18n="aiConfigHeading">AI Motion Engine Connection</span>
+              <span class="badge-offline-safe" title="API Key disimpan secara aman di LocalStorage perangkat ini saja">Safe Local Storage</span>
+            </div>
+
+            <div class="ai-config-grid">
+              <div class="meta-field-group">
+                <label for="aiProviderSelect" data-i18n="aiProviderLabel">AI Provider:</label>
+                <select id="aiProviderSelect" class="form-select">
+                  <option value="gemini" selected>Google Gemini</option>
+                  <option value="openai">OpenAI</option>
+                </select>
+              </div>
+
+              <div class="meta-field-group">
+                <label for="aiModelSelect" data-i18n="aiModelLabel">Model AI:</label>
+                <select id="aiModelSelect" class="form-select" disabled>
+                  <option value="">(Masukkan API Key untuk memuat model)</option>
+                </select>
+              </div>
+
+              <div class="meta-field-group full-width">
+                <div class="ai-key-label-row">
+                  <label for="aiApiKeyInput" data-i18n="aiApiKeyLabel">API Key:</label>
+                  <a href="https://aistudio.google.com/app/apikey" id="aiGetApiKeyLink" target="_blank" class="ai-key-helper-link">Dapatkan Gemini API Key Gratis ↗</a>
+                </div>
+                <div class="ai-key-input-wrapper">
+                  <div class="ai-key-input-inner">
+                    <input type="password" id="aiApiKeyInput" class="form-input" placeholder="Masukkan API Key..." autocomplete="off" spellcheck="false">
+                    <button type="button" id="btnToggleAiKeyVisibility" class="btn-icon-addon" title="Lihat / Sembunyikan API Key">
+                      <svg id="iconEyeOpen" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                  <button type="button" id="btnSaveAiKey" class="btn-action-alt btn-save-key" title="Simpan API Key ke Penyimpanan Lokal">
+                    <span data-i18n="btnSaveAiKey">Simpan Key</span>
+                  </button>
+                </div>
+                <div id="aiKeyStatusMessage" class="ai-key-status"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Prompt & Parameter Blueprint -->
+          <div class="studio-params-card ai-prompt-card">
+            <div class="studio-params-header">
+              <span class="params-heading" data-i18n="aiPromptHeading">Motion Blueprint & Visual Concept</span>
+              <span class="params-res-tag">NARA 4K Native • Deterministic Clock</span>
+            </div>
+
+            <!-- Inspiration Quick Chips -->
+            <div class="ai-chips-wrapper">
+              <span class="ai-chips-label" data-i18n="aiInspirationLabel">Inspirasi Cepat:</span>
+              <div class="ai-chips-list" id="aiInspirationChips"></div>
+            </div>
+
+            <div class="meta-field-group full-width">
+              <label for="aiThemePrompt" data-i18n="aiThemeLabel">Tema & Deskripsi Ide Animasi:</label>
+              <textarea id="aiThemePrompt" class="form-textarea" rows="2" placeholder="Contoh: Futuristic Cyberpunk Hologram HUD dengan lingkaran energi cyan, scan radar rotasi, glitch angka matrix..."></textarea>
+            </div>
+
+            <!-- AI Asset Attachment Drop/Select Box -->
+            <div class="ai-assets-container">
+              <div class="ai-assets-header">
+                <span class="ai-assets-title">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                  </svg>
+                  <span>Lampirkan File & Aset (Gambar, Logo PNG, SVG, Icon):</span>
+                </span>
+                <button type="button" id="btnSelectAiAssets" class="btn-text-subtle" title="Pilih gambar, logo transparan, SVG, atau audio dari komputer">
+                  + Pilih File Aset
+                </button>
+              </div>
+
+              <div id="aiAssetDropZone" class="ai-asset-dropzone">
+                <input type="file" id="aiAssetFileInput" multiple accept="image/*,.svg,audio/*" style="display: none;">
+                <span class="ai-asset-drop-hint">Seret logo/gambar/SVG ke sini, atau klik "Pilih File Aset" untuk dianimasikan oleh AI</span>
+              </div>
+
+              <!-- List of attached assets -->
+              <div id="aiAttachedAssetsList" class="ai-attached-assets-list" style="display: none;"></div>
+            </div>
+
+            <!-- Parameters: Duration, FPS, Resolution, Looping, Background -->
+            <div class="ai-blueprint-grid">
+              <div class="meta-field-group">
+                <label for="aiDurationInput" data-i18n="aiDurationLabel">Durasi Animasi (Detik):</label>
+                <div class="input-with-suffix">
+                  <input type="number" id="aiDurationInput" class="form-input" min="1" max="60" step="0.5" value="3.0">
+                  <span class="suffix">Detik</span>
+                </div>
+              </div>
+
+              <div class="meta-field-group">
+                <label for="aiCalculatedFrames" data-i18n="aiCalculatedFramesLabel">Total Frames (@60fps):</label>
+                <div class="input-with-suffix">
+                  <input type="text" id="aiCalculatedFrames" class="form-input read-only-input" readonly value="180 F">
+                </div>
+              </div>
+
+              <div class="meta-field-group">
+                <label for="aiResolutionSelect" data-i18n="aiResolutionLabel">Rasio & Resolusi:</label>
+                <select id="aiResolutionSelect" class="form-select">
+                  <option value="3840x2160" selected>4K UHD (3840×2160) - 16:9 Landscape</option>
+                  <option value="1920x1080">Full HD (1920×1080) - 16:9 Landscape</option>
+                  <option value="1080x1920">Vertical Shorts/Reels (1080×1920) - 9:16</option>
+                  <option value="2160x2160">Square (2160×2160) - 1:1</option>
+                </select>
+              </div>
+
+              <div class="meta-field-group">
+                <label for="aiBgStyleSelect" data-i18n="aiBgStyleLabel">Latar Belakang (Alpha):</label>
+                <select id="aiBgStyleSelect" class="form-select">
+                  <option value="dark" selected>Cinematic Dark Cyber (#060814)</option>
+                  <option value="transparent">Transparent Alpha (ProRes 4444 Ready)</option>
+                  <option value="light">Clean Light Studio (#F5F7FA)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Looping Checkbox -->
+            <div class="meta-field-group" style="margin-top: 10px;">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="aiChkSeamlessLoop" checked>
+                <span class="checkmark"></span>
+                <span class="checkbox-label-text">
+                  <strong data-i18n="aiLoopTitle">Seamless 360° Circular Looping</strong>
+                  <small data-i18n="aiLoopDesc">Menjamin frame terakhir menyatu sempurna kembali ke frame awal tanpa patah</small>
+                </span>
+              </label>
+            </div>
+
+            <!-- AI Progress Status Banner -->
+            <div id="aiStatusBar" class="ai-status-bar" style="display: none;">
+              <div class="ai-status-spinner">
+                <svg class="animate-spin" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+                </svg>
+              </div>
+              <span id="aiStatusText" class="ai-status-text">Menghubungi AI Model...</span>
+            </div>
+
+            <!-- Action Buttons (2-Tier Layout) -->
+            <div class="ai-actions-wrapper">
+              <button id="btnAiGenerate" class="btn-primary ai-btn-generate-main" title="Sintesis animasi HTML5 baru menggunakan AI">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+                <span data-i18n="btnAiGenerate">✨ Generate Animation with AI</span>
+              </button>
+
+              <div class="ai-secondary-actions-grid">
+                <button id="btnAiPreview" class="btn-action-alt" disabled title="Tampilkan hasil di Live Preview player">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  <span data-i18n="btnAiPreview">Live Preview</span>
+                </button>
+
+                <button id="btnAiSaveHtml" class="btn-action-alt" disabled title="Simpan file .html ke disk komputer">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                  <span data-i18n="btnAiSaveHtml">Simpan HTML</span>
+                </button>
+
+                <button id="btnAiQueueRender" class="btn-action-alt btn-queue-action" disabled title="Masukkan animasi ini ke antrean batch render 4K">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span data-i18n="btnAiQueueRender">+ Antrean</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Generated Code Collapsible Box -->
+            <details id="aiCodeDetails" class="ai-code-details" style="display: none;">
+              <summary>
+                <span data-i18n="aiCodeDetailsSummary">Inspeksi Kode HTML5 NARA yang Dihasilkan</span>
+                <button type="button" id="btnCopyAiCode" class="btn-tiny" data-i18n="btnCopyAiCode">Salin Kode</button>
+              </summary>
+              <pre><code id="aiGeneratedCodeBlock"></code></pre>
+            </details>
+          </div>
+        </div> <!-- End of #viewAiContainer -->
+
         <!-- Mini Terminal Log Console -->
         <div class="terminal-log-card">
           <div class="terminal-header">
@@ -632,6 +871,7 @@
   <script src="generators/abstract-motion.js"></script>
   <script src="generators/flat-animation.js"></script>
   <script src="generators/index.js"></script>
+  <script src="generators/ai-generator.js"></script>
 
   <script src="app.js"></script>
 </body>
