@@ -23,6 +23,11 @@ contextBridge.exposeInMainWorld('api', {
   cancelBatchRender: () => ipcRenderer.invoke('engine:cancelBatchRender'),
   openFolder: (dirPath) => ipcRenderer.invoke('system:openFolder', dirPath),
 
+  // System Tray & Window Visibility
+  hideToTray: () => ipcRenderer.invoke('system:hideToTray'),
+  showWindow: () => ipcRenderer.invoke('system:showWindow'),
+  isWindowVisible: () => ipcRenderer.invoke('system:isWindowVisible'),
+
   // Live event listeners from Main Process
   onRenderProgress: (callback) => {
     const subscription = (event, data) => callback(data);

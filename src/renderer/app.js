@@ -132,7 +132,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       logEngineFfmpeg: "[Engine] Menggunakan binary FFmpeg:",
       logEnginePiped: "[Engine] Semua frame terkirim. Menutup stdin FFmpeg...",
       logEngineSuccess: "[Engine] Render selesai dengan sukses:",
-      logEngineFailed: "[Engine Error] Render gagal:"
+      logEngineFailed: "[Engine Error] Render gagal:",
+      btnHideToTray: "Tray",
+      btnHideToTrayTitle: "Sembunyikan ke System Tray (Tetap Berjalan di Background)",
+      logHiddenToTray: "[System] Aplikasi diminimalkan ke Tray & tetap aktif di background."
     },
     en: {
       soundEnabled: "Sound: On",
@@ -248,7 +251,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       logEngineFfmpeg: "[Engine] Using FFmpeg binary:",
       logEnginePiped: "[Engine] All frames piped. Closing FFmpeg stdin...",
       logEngineSuccess: "[Engine] Render completed successfully:",
-      logEngineFailed: "[Engine Error] Render failed:"
+      logEngineFailed: "[Engine Error] Render failed:",
+      btnHideToTray: "Tray",
+      btnHideToTrayTitle: "Hide to System Tray (Keep Running in Background)",
+      logHiddenToTray: "[System] App minimized to System Tray & active in background."
     },
     ja: {
       soundEnabled: "通知音: オン",
@@ -1021,6 +1027,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (dict[key]) opt.textContent = dict[key];
     });
 
+    // Update all elements with data-i18n-title
+    document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+      const key = el.getAttribute('data-i18n-title');
+      if (dict[key]) el.title = dict[key];
+    });
+
         const themeToggleLabel = document.getElementById("themeToggleLabel");
     if (themeToggleLabel) {
       themeToggleLabel.textContent = currentTheme === "light" ? dict.themeLight : dict.themeDark;
@@ -1356,6 +1368,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   updateSoundToggleUI();
+
+  const btnHideToTray = document.getElementById('btnHideToTray');
+  if (btnHideToTray) {
+    btnHideToTray.addEventListener('click', async () => {
+      if (window.api && window.api.hideToTray) {
+        addTerminalLog('', 'info', 'logHiddenToTray');
+        await window.api.hideToTray();
+      }
+    });
+  }
 
   selectAppLanguage.value = currentLang;
   applyLanguage(currentLang);

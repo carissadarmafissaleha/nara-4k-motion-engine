@@ -379,6 +379,39 @@ body {
   align-items: center;
 }
 
+/* System Tray / Background Run Toggle Button (Monochrome Zinc Architecture) */
+.btn-tray-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  padding: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  color: var(--text-secondary);
+  transition: var(--transition-fast);
+}
+
+.btn-tray-toggle:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
+
+.btn-tray-toggle:active {
+  transform: scale(0.96);
+}
+
+.btn-tray-toggle .tray-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
 /* shadcn Badges */
 .engine-badge {
   font-size: 0.68rem;

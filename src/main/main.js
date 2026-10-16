@@ -3,15 +3,23 @@
  * Electron Lifecycle, IPC Handlers, and Batch Rendering Coordinator
  */
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { RenderEngine } = require('./engine/render-engine');
 const { parseHtmlMetadata, enrichMetadata, exportMetadataToCsv } = require('./engine/metadata-parser');
 
+// Prevent background timer throttling when running hidden in tray
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+
 let mainWindow = null;
 let renderEngine = null;
 let isBatchRunning = false;
+let tray = null;
+let isQuitting = false;
+let currentBatchStatus = 'idle'; // 'idle' | 'rendering' | 'completed' | 'cancelled'
+let activeBatchInfo = { current: 0, total: 0, activeFile: '' };
+let hasShownTrayBalloon = false;
 
 function safeExistsSync(targetPath) {
   if (typeof targetPath !== 'string' || !targetPath.trim()) {
@@ -24,6 +32,169 @@ function safeExistsSync(targetPath) {
   }
 }
 
+function getAppIconPath() {
+  const paths = [
+    path.join(__dirname, '../assets/icon128.png'),
+    path.join(__dirname, '../assets/icon48.png'),
+    path.join(__dirname, '../../extension/icons/icon128.png')
+  ];
+  for (const p of paths) {
+    if (safeExistsSync(p)) return p;
+  }
+  return undefined;
+}
+
+function getTrayIcon() {
+  const candidatePaths = [
+    path.join(__dirname, '../assets/icon16.png'),
+    path.join(__dirname, '../assets/icon48.png'),
+    path.join(__dirname, '../../extension/icons/icon16.png'),
+    path.join(__dirname, '../../extension/icons/icon48.png')
+  ];
+  for (const p of candidatePaths) {
+    if (safeExistsSync(p)) {
+      return nativeImage.createFromPath(p);
+    }
+  }
+  return null;
+}
+
+function updateTrayMenu() {
+  if (!tray) return;
+
+  let statusLabel = 'Status: Siap (Idle)';
+  if (currentBatchStatus === 'rendering') {
+    statusLabel = `Status: Merender (${activeBatchInfo.current}/${activeBatchInfo.total}) ${activeBatchInfo.activeFile ? '- ' + activeBatchInfo.activeFile : ''}`;
+  } else if (currentBatchStatus === 'completed') {
+    statusLabel = `Status: Selesai (${activeBatchInfo.total} file)`;
+  } else if (currentBatchStatus === 'cancelled') {
+    statusLabel = 'Status: Dibatalkan';
+  }
+
+  const isWinVisible = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && !mainWindow.isMinimized();
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'NARA Motion Studio',
+      enabled: false
+    },
+    {
+      label: statusLabel,
+      enabled: false
+    },
+    { type: 'separator' },
+    {
+      label: isWinVisible ? 'Sembunyikan ke Tray' : 'Buka NARA Studio',
+      click: () => {
+        if (isWinVisible) {
+          hideToTray();
+        } else {
+          showMainWindow();
+        }
+      }
+    },
+    {
+      label: 'Buka Folder Hasil',
+      click: async () => {
+        const userVideos = app.getPath('videos') || app.getPath('documents');
+        const defaultDir = path.join(userVideos, 'Nara Motions');
+        if (safeExistsSync(defaultDir)) {
+          await shell.openPath(defaultDir);
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Keluar dari NARA',
+      click: async () => {
+        isQuitting = true;
+        if (renderEngine) {
+          try { await renderEngine.close(); } catch (e) {}
+        }
+        if (tray) {
+          try { tray.destroy(); } catch (e) {}
+          tray = null;
+        }
+        app.quit();
+      }
+    }
+  ]);
+
+  tray.setContextMenu(contextMenu);
+}
+
+function showMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow();
+    return;
+  }
+  if (mainWindow.isMinimized()) {
+    mainWindow.restore();
+  }
+  mainWindow.show();
+  mainWindow.focus();
+  updateTrayMenu();
+}
+
+function hideToTray() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.hide();
+    updateTrayMenu();
+    notifyHiddenToTray();
+  }
+}
+
+function toggleMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow();
+    return;
+  }
+  if (mainWindow.isVisible() && !mainWindow.isMinimized()) {
+    hideToTray();
+  } else {
+    showMainWindow();
+  }
+}
+
+function notifyHiddenToTray() {
+  if (!hasShownTrayBalloon && tray) {
+    hasShownTrayBalloon = true;
+    try {
+      tray.displayBalloon({
+        title: 'NARA Motion Studio',
+        content: 'Aplikasi berjalan di background. Klik dua kali ikon tray untuk membuka kembali.',
+        iconType: 'info'
+      });
+    } catch (e) {}
+  }
+}
+
+function createTray() {
+  if (tray) return;
+  const icon = getTrayIcon();
+  if (!icon) {
+    console.warn('[Tray] Icon not found, skipping tray creation');
+    return;
+  }
+
+  tray = new Tray(icon);
+  tray.setToolTip('NARA - Commercial Motion Studio (Running in background)');
+
+  tray.on('click', () => {
+    toggleMainWindow();
+  });
+
+  tray.on('double-click', () => {
+    showMainWindow();
+  });
+
+  tray.on('balloon-click', () => {
+    showMainWindow();
+  });
+
+  updateTrayMenu();
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -32,6 +203,7 @@ function createWindow() {
     minHeight: 560,
     title: 'NARA - Commercial 4K & ProRes 4444 Motion Studio',
     backgroundColor: '#070a12',
+    icon: getAppIconPath(),
     show: true,
     autoHideMenuBar: true,
     webPreferences: {
@@ -39,7 +211,8 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-      webSecurity: false // Allows loading local file preview in sandbox
+      webSecurity: false, // Allows loading local file preview in sandbox
+      backgroundThrottling: false // Penting: Biarkan rendering & background tasks berjalan lancar saat di tray
     }
   });
 
@@ -48,10 +221,28 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.focus();
+    updateTrayMenu();
   });
 
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
     console.error('[Window Load Error]', errorCode, errorDescription);
+  });
+
+  // Intercept window close to hide to tray instead of quitting
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      hideToTray();
+      return false;
+    }
+  });
+
+  mainWindow.on('show', () => {
+    updateTrayMenu();
+  });
+
+  mainWindow.on('hide', () => {
+    updateTrayMenu();
   });
 
   mainWindow.on('closed', () => {
@@ -65,23 +256,36 @@ if (!gotTheLock) {
   app.quit();
 } else {
   app.on('second-instance', () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.show();
-      mainWindow.focus();
-    }
+    showMainWindow();
   });
 
   // App lifecycle
   app.whenReady().then(() => {
     renderEngine = new RenderEngine();
+    createTray();
     createWindow();
 
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      } else {
+        showMainWindow();
+      }
     });
   });
 }
+
+app.on('before-quit', () => {
+  isQuitting = true;
+});
+
+app.on('will-quit', async () => {
+  if (renderEngine) {
+    try {
+      await renderEngine.close();
+    } catch (e) {}
+  }
+});
 
 app.on('window-all-closed', async () => {
   if (renderEngine) {
@@ -234,7 +438,12 @@ ipcMain.handle('engine:cancelBatchRender', async () => {
   if (renderEngine && isBatchRunning) {
     renderEngine.cancel();
     isBatchRunning = false;
-    if (mainWindow) {
+    currentBatchStatus = 'cancelled';
+    updateTrayMenu();
+    if (tray) {
+      tray.setToolTip('NARA - Batch rendering dibatalkan');
+    }
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('render:status', { status: 'cancelled' });
       mainWindow.webContents.send('render:log', '[Engine] Batch rendering cancelled by user.');
     }
@@ -255,19 +464,27 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
   }
 
   isBatchRunning = true;
+  currentBatchStatus = 'rendering';
+  activeBatchInfo = { current: 1, total: items.length, activeFile: '' };
+  updateTrayMenu();
+  if (tray) {
+    tray.setToolTip(`NARA - Memulai render (${items.length} file)`);
+  }
+
   const outputDir = settings.outputDir;
   const metadataRecordsForCsv = [];
   let successfulRenders = 0;
   let failedRenders = 0;
 
-  mainWindow.webContents.send('render:status', {
-    status: 'rendering',
-    totalQueue: items.length,
-    activeFileIndex: 0
-  });
-
-  mainWindow.webContents.send('render:log', `[Batch] Starting batch queue: ${items.length} items`);
-  mainWindow.webContents.send('render:log', `[Batch] Output directory: ${outputDir}`);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('render:status', {
+      status: 'rendering',
+      totalQueue: items.length,
+      activeFileIndex: 0
+    });
+    mainWindow.webContents.send('render:log', `[Batch] Starting batch queue: ${items.length} items`);
+    mainWindow.webContents.send('render:log', `[Batch] Output directory: ${outputDir}`);
+  }
 
   for (let idx = 0; idx < items.length; idx++) {
     if (!isBatchRunning) break; // cancelled
@@ -289,15 +506,23 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
     const outputFilename = `${baseName}_${preset}${bgSuffix}_${width}x${height}_${fps}fps${ext}`;
     const outputPath = path.join(outputDir, outputFilename);
 
-    mainWindow.webContents.send('render:status', {
-      status: 'rendering',
-      activeFile: baseName,
-      queueIndex: idx + 1,
-      totalQueue: items.length
-    });
+    activeBatchInfo.current = idx + 1;
+    activeBatchInfo.activeFile = baseName;
+    updateTrayMenu();
+    if (tray) {
+      tray.setToolTip(`NARA (${idx + 1}/${items.length}) - ${baseName.slice(0, 40)}`);
+    }
 
-    mainWindow.webContents.send('render:log', `--------------------------------------------------`);
-    mainWindow.webContents.send('render:log', `[Batch] (${idx + 1}/${items.length}) Rendering: ${baseName}`);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('render:status', {
+        status: 'rendering',
+        activeFile: baseName,
+        queueIndex: idx + 1,
+        totalQueue: items.length
+      });
+      mainWindow.webContents.send('render:log', `--------------------------------------------------`);
+      mainWindow.webContents.send('render:log', `[Batch] (${idx + 1}/${items.length}) Rendering: ${baseName}`);
+    }
 
     try {
       // 1. Parse & enrich metadata beforehand for IN-FILE EMBEDDING & CSV EXPORT
@@ -338,7 +563,10 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
           metadata: mergedMeta
         },
         (progress) => {
-          if (mainWindow) {
+          if (tray && progress && typeof progress.percent === 'number') {
+            tray.setToolTip(`NARA [${progress.percent}%] (${idx + 1}/${items.length}): ${baseName.slice(0, 30)}`);
+          }
+          if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('render:progress', {
               ...progress,
               fileIndex: idx,
@@ -347,7 +575,7 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
           }
         },
         (logMsg) => {
-          if (mainWindow) {
+          if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('render:log', logMsg);
           }
         }
@@ -363,23 +591,27 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
 
       successfulRenders++;
 
-      mainWindow.webContents.send('render:fileComplete', {
-        fileIndex: idx,
-        filename: baseName,
-        outputPath,
-        success: true
-      });
-      mainWindow.webContents.send('render:log', `[Batch] Successfully exported: ${outputFilename}`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('render:fileComplete', {
+          fileIndex: idx,
+          filename: baseName,
+          outputPath,
+          success: true
+        });
+        mainWindow.webContents.send('render:log', `[Batch] Successfully exported: ${outputFilename}`);
+      }
     } catch (err) {
       failedRenders++;
-      mainWindow.webContents.send('render:fileComplete', {
-        fileIndex: idx,
-        filename: baseName,
-        outputPath,
-        success: false,
-        error: err.message
-      });
-      mainWindow.webContents.send('render:log', `[Batch Error] Failed to render ${baseName}: ${err.message}`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('render:fileComplete', {
+          fileIndex: idx,
+          filename: baseName,
+          outputPath,
+          success: false,
+          error: err.message
+        });
+        mainWindow.webContents.send('render:log', `[Batch Error] Failed to render ${baseName}: ${err.message}`);
+      }
     }
   }
 
@@ -390,26 +622,49 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
       const csvResult = await exportMetadataToCsv(outputDir, metadataRecordsForCsv);
       csvPath = typeof csvResult === 'object' ? csvResult.csvPath : csvResult;
       const totalRows = typeof csvResult === 'object' ? csvResult.totalRows : metadataRecordsForCsv.length;
-      mainWindow.webContents.send('render:log', `[Auto-Metadata CSV] Berhasil append ${metadataRecordsForCsv.length} video ke: ${csvPath} (Total di CSV: ${totalRows} baris). Data lama tersimpan aman!`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('render:log', `[Auto-Metadata CSV] Berhasil append ${metadataRecordsForCsv.length} video ke: ${csvPath} (Total di CSV: ${totalRows} baris). Data lama tersimpan aman!`);
+      }
     } catch (csvErr) {
-      mainWindow.webContents.send('render:log', `[Metadata Error] CSV export error: ${csvErr.message}`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('render:log', `[Metadata Error] CSV export error: ${csvErr.message}`);
+      }
     }
   }
 
   isBatchRunning = false;
+  currentBatchStatus = 'completed';
+  activeBatchInfo.total = items.length;
+  updateTrayMenu();
 
-  mainWindow.webContents.send('render:status', {
-    status: 'completed',
-    totalQueue: items.length
-  });
+  if (tray) {
+    tray.setToolTip(`NARA - Selesai: ${successfulRenders}/${items.length} file`);
+    // Jika window sedang disembunyikan di tray, beri notifikasi balon ke user
+    if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) {
+      try {
+        tray.displayBalloon({
+          title: 'NARA - Render Selesai',
+          content: `Batch render selesai (${successfulRenders} sukses, ${failedRenders} gagal). Klik untuk membuka NARA Studio.`,
+          iconType: 'info'
+        });
+      } catch (e) {}
+    }
+  }
 
-  mainWindow.webContents.send('render:batchComplete', {
-    total: items.length,
-    successful: successfulRenders,
-    failed: failedRenders,
-    outputDir,
-    csvPath
-  });
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('render:status', {
+      status: 'completed',
+      totalQueue: items.length
+    });
+
+    mainWindow.webContents.send('render:batchComplete', {
+      total: items.length,
+      successful: successfulRenders,
+      failed: failedRenders,
+      outputDir,
+      csvPath
+    });
+  }
 
   return {
     success: true,
@@ -419,3 +674,21 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
     csvPath
   };
 });
+
+// IPC Handler: Hide Window to System Tray
+ipcMain.handle('system:hideToTray', () => {
+  hideToTray();
+  return { success: true };
+});
+
+// IPC Handler: Restore/Show Window from Tray
+ipcMain.handle('system:showWindow', () => {
+  showMainWindow();
+  return { success: true };
+});
+
+// IPC Handler: Check if Window is Visible
+ipcMain.handle('system:isWindowVisible', () => {
+  return mainWindow && !mainWindow.isDestroyed() ? mainWindow.isVisible() : false;
+});
+
