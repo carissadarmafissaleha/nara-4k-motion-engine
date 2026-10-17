@@ -1253,6 +1253,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const metaAudioBox = document.getElementById('metaAudioBox');
   const metaAudioFilename = document.getElementById('metaAudioFilename');
 
+  // Per-Video Detected Folder Assets Info Box
+  const metaAssetsBox = document.getElementById('metaAssetsBox');
+  const metaAssetsSummary = document.getElementById('metaAssetsSummary');
+  const btnToggleAssetsDetail = document.getElementById('btnToggleAssetsDetail');
+  const metaAssetsList = document.getElementById('metaAssetsList');
+
+  if (btnToggleAssetsDetail && metaAssetsList) {
+    btnToggleAssetsDetail.addEventListener('click', () => {
+      const isHidden = metaAssetsList.style.display === 'none';
+      metaAssetsList.style.display = isHidden ? 'flex' : 'none';
+      btnToggleAssetsDetail.textContent = isHidden ? 'Tutup' : 'Detail';
+    });
+  }
+
   // Preview Synchronized Audio
   let previewAudio = null;
 
@@ -1818,6 +1832,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     metaHoldFrameContainer.style.display = metaChkLoop.checked ? 'none' : 'flex';
     metaHoldFrameInput.value = meta.holdLastFrames !== undefined ? meta.holdLastFrames : 30;
 
+    // Synchronize detected folder assets (Images, JS, CSS)
+    if (metaAssetsBox && metaAssetsSummary) {
+      const assetInfo = item.detectedAssets;
+      if (assetInfo && assetInfo.totalCount > 0) {
+        metaAssetsBox.style.display = 'flex';
+        metaAssetsSummary.textContent = assetInfo.summary;
+        if (metaAssetsList) {
+          metaAssetsList.innerHTML = '';
+          (assetInfo.images || []).forEach(f => {
+            const div = document.createElement('div');
+            div.className = 'assets-detail-item';
+            div.innerHTML = `<span class="assets-detail-badge assets-badge-img">IMG</span> <span>${f}</span>`;
+            metaAssetsList.appendChild(div);
+          });
+          (assetInfo.scripts || []).forEach(f => {
+            const div = document.createElement('div');
+            div.className = 'assets-detail-item';
+            div.innerHTML = `<span class="assets-detail-badge assets-badge-js">JS</span> <span>${f}</span>`;
+            metaAssetsList.appendChild(div);
+          });
+          (assetInfo.styles || []).forEach(f => {
+            const div = document.createElement('div');
+            div.className = 'assets-detail-item';
+            div.innerHTML = `<span class="assets-detail-badge assets-badge-css">CSS</span> <span>${f}</span>`;
+            metaAssetsList.appendChild(div);
+          });
+        }
+      } else {
+        metaAssetsBox.style.display = 'none';
+      }
+    }
+
     metaTypeBadge.textContent = metaChkLoop.checked ? t('loopReady') : t('oneShotReady');
     metaTypeBadge.className = `meta-tag ${metaChkLoop.checked ? 'badge-loop' : 'badge-oneshot'}`;
     previewModeTag.textContent = metaChkLoop.checked ? '[LOOP]' : '[ONE-SHOT]';
@@ -2081,11 +2127,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       <\/script>
     `;
 
+    if (res.detectedAssets) {
+      item.detectedAssets = res.detectedAssets;
+    }
+
+    // Resolve directory file URL for relative asset resolution (images, js, css)
+    const folderDirUrl = res.dirUrl || (item.filePath ? `file:///${item.filePath.substring(0, Math.max(item.filePath.lastIndexOf('/'), item.filePath.lastIndexOf('\\')) + 1).replace(/\\/g, '/')}/` : '');
+    const baseTag = folderDirUrl ? `<base href="${folderDirUrl}">` : '';
+
     let injectedHtml = res.content;
-    if (injectedHtml.includes('<head>')) {
-      injectedHtml = injectedHtml.replace('<head>', `<head>${injectionScript}`);
+    // Replace any relative base tag with the exact folder URL
+    if (baseTag && /<base\b[^>]*>/i.test(injectedHtml)) {
+      injectedHtml = injectedHtml.replace(/<base\b[^>]*>/i, baseTag);
+    }
+
+    const injection = `${baseTag}\n${injectionScript}`;
+    if (/<head\b[^>]*>/i.test(injectedHtml)) {
+      injectedHtml = injectedHtml.replace(/<head\b[^>]*>/i, `<head>\n${injection}`);
+    } else if (/<html\b[^>]*>/i.test(injectedHtml)) {
+      injectedHtml = injectedHtml.replace(/<html\b[^>]*>/i, `<html>\n<head>${injection}</head>`);
     } else {
-      injectedHtml = `${injectionScript}${injectedHtml}`;
+      injectedHtml = `<head>${injection}</head>\n${injectedHtml}`;
     }
 
     previewPlaceholder.style.display = 'none';
@@ -2113,6 +2175,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnStepNext.disabled = false;
 
     previewIframe.onload = () => {
+      try {
+        const doc = previewIframe.contentDocument;
+        if (doc) {
+          const imgs = Array.from(doc.images || []);
+          if (imgs.length > 0) {
+            Promise.all(imgs.map(img => {
+              if (img.complete) return Promise.resolve();
+              return new Promise(resolve => {
+                img.addEventListener('load', resolve, { once: true });
+                img.addEventListener('error', resolve, { once: true });
+              });
+            })).then(() => {
+              seekToFrame(0);
+            });
+            return;
+          }
+        }
+      } catch (e) {}
       seekToFrame(0);
     };
 
@@ -2401,6 +2481,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           filename: rawMeta.filename,
           audioPath: rawMeta.audioPath || null,
           audioFilename: rawMeta.audioFilename || null,
+          detectedAssets: rawMeta.detectedAssets || null,
           metadata,
           status: 'pending',
           progress: 0,
@@ -2413,6 +2494,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           addTerminalLog('', 'info', 'logAudioDetected', `${rawMeta.filename} -> ${rawMeta.audioFilename}`);
         } else {
           addTerminalLog('', 'info', 'logQueueAdded', `${metadata.filename} (${metadata.title || 'Untitled'})`);
+        }
+        if (rawMeta.detectedAssets && rawMeta.detectedAssets.totalCount > 0) {
+          addTerminalLog(`[Asset Loader] Memuat folder aset untuk ${rawMeta.filename}: ${rawMeta.detectedAssets.summary}`, 'info');
         }
       } catch (err) {
         addTerminalLog(`[Error] Failed to read ${filePath}: ${err.message}`, 'error');
@@ -2468,6 +2552,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="queue-file-meta">
               <span>${item.filename}</span> • <span class="queue-duration-tag">${framesStr}</span>
               ${item.audioPath ? `<span class="queue-audio-tag" title="File Audio: ${item.audioFilename}">🎵 ${item.audioFilename}</span>` : ''}
+              ${item.detectedAssets && item.detectedAssets.totalCount > 0 ? `<span class="queue-assets-tag" title="Aset Terdeteksi: ${item.detectedAssets.summary}">📁 ${item.detectedAssets.summary}</span>` : ''}
             </div>
           </div>
         </div>
@@ -2540,6 +2625,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateAlphaToggleVisibility();
     updatePreviewAudio(null);
     if (metaAudioBox) metaAudioBox.style.display = 'none';
+    if (metaAssetsBox) metaAssetsBox.style.display = 'none';
   }
 
   // Clear Entire Queue Button

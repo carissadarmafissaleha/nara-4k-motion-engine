@@ -60,6 +60,101 @@ function findMatchingAudioFile(filePath) {
 }
 
 /**
+ * Detect assets (images, js, css) in the same directory and subdirectories as the HTML file
+ * Also inspects HTML content for referenced local relative paths.
+ * @param {string} filePath - Path to HTML animation
+ * @param {string} [htmlContent] - Optional HTML text content
+ * @returns {{ dir: string, images: string[], scripts: string[], styles: string[], totalCount: number, summary: string }}
+ */
+function detectFolderAssets(filePath, htmlContent = null) {
+  if (!filePath || typeof filePath !== 'string') {
+    return { dir: '', images: [], scripts: [], styles: [], totalCount: 0, summary: '' };
+  }
+  try {
+    const dir = path.dirname(filePath);
+    const htmlName = path.basename(filePath);
+    const imageExtensions = new Set(['.png', '.jpg', '.jpeg', '.svg', '.webp', '.gif', '.bmp', '.ico', '.avif']);
+    const scriptExtensions = new Set(['.js', '.mjs']);
+    const styleExtensions = new Set(['.css']);
+
+    const foundImages = new Set();
+    const foundScripts = new Set();
+    const foundStyles = new Set();
+
+    // 1. Scan directory up to 2 levels deep for assets
+    function scanDir(currentDir, relativePrefix = '', depth = 0) {
+      if (depth > 2) return;
+      if (!fs.existsSync(currentDir)) return;
+      const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'dist') continue;
+        const relPath = relativePrefix ? `${relativePrefix}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) {
+          scanDir(path.join(currentDir, entry.name), relPath, depth + 1);
+        } else if (entry.isFile()) {
+          if (depth === 0 && entry.name === htmlName) continue;
+          const ext = path.extname(entry.name).toLowerCase();
+          if (imageExtensions.has(ext)) {
+            foundImages.add(relPath);
+          } else if (scriptExtensions.has(ext)) {
+            foundScripts.add(relPath);
+          } else if (styleExtensions.has(ext)) {
+            foundStyles.add(relPath);
+          }
+        }
+      }
+    }
+
+    if (fs.existsSync(dir)) {
+      scanDir(dir);
+    }
+
+    // 2. If htmlContent provided, also check if specific relative assets are referenced in HTML
+    if (htmlContent && typeof htmlContent === 'string') {
+      const srcHrefRegex = /(?:src|href)\s*=\s*["']([^"':#?]+)["']/gi;
+      let match;
+      while ((match = srcHrefRegex.exec(htmlContent)) !== null) {
+        const ref = match[1].trim();
+        if (!ref || ref.startsWith('http://') || ref.startsWith('https://') || ref.startsWith('//') || ref.startsWith('data:') || ref.startsWith('blob:')) {
+          continue;
+        }
+        const cleanRef = ref.replace(/^\.\//, '').replace(/\\/g, '/');
+        const ext = path.extname(cleanRef).toLowerCase();
+        if (imageExtensions.has(ext)) {
+          foundImages.add(cleanRef);
+        } else if (scriptExtensions.has(ext)) {
+          foundScripts.add(cleanRef);
+        } else if (styleExtensions.has(ext)) {
+          foundStyles.add(cleanRef);
+        }
+      }
+    }
+
+    const images = Array.from(foundImages);
+    const scripts = Array.from(foundScripts);
+    const styles = Array.from(foundStyles);
+    const totalCount = images.length + scripts.length + styles.length;
+
+    const parts = [];
+    if (images.length) parts.push(`${images.length} Gambar`);
+    if (scripts.length) parts.push(`${scripts.length} JS`);
+    if (styles.length) parts.push(`${styles.length} CSS`);
+    const summary = parts.length ? parts.join(', ') : 'Tidak ada aset eksternal';
+
+    return {
+      dir,
+      images,
+      scripts,
+      styles,
+      totalCount,
+      summary
+    };
+  } catch (e) {
+    return { dir: '', images: [], scripts: [], styles: [], totalCount: 0, summary: '' };
+  }
+}
+
+/**
  * Parse key="value" pairs from a string (e.g., from comment metadata)
  * @param {string} text 
  * @returns {Record<string, string>}
@@ -387,10 +482,15 @@ async function parseHtmlMetadata(filePath, content = null) {
     result.audioPath = audioInfo ? audioInfo.path : null;
     result.audioFilename = audioInfo ? audioInfo.filename : null;
 
+    // 9. Auto-detect assets (images, js, css) in the same folder
+    const assetInfo = detectFolderAssets(filePath, html);
+    result.detectedAssets = assetInfo;
+
     return result;
   } catch (error) {
     console.error(`Failed to parse metadata from ${filePath}:`, error);
     const fallbackAudio = findMatchingAudioFile(filePath);
+    const fallbackAssets = detectFolderAssets(filePath);
     return {
       filePath,
       filename: path.basename(filePath),
@@ -405,7 +505,8 @@ async function parseHtmlMetadata(filePath, content = null) {
       loop: null,
       holdLastFrames: 0,
       audioPath: fallbackAudio ? fallbackAudio.path : null,
-      audioFilename: fallbackAudio ? fallbackAudio.filename : null
+      audioFilename: fallbackAudio ? fallbackAudio.filename : null,
+      detectedAssets: fallbackAssets
     };
   }
 }
@@ -553,5 +654,6 @@ module.exports = {
   enrichMetadata,
   exportMetadataToCsv,
   filenameToTitle,
-  findMatchingAudioFile
+  findMatchingAudioFile,
+  detectFolderAssets
 };

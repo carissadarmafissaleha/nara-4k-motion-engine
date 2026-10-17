@@ -1049,6 +1049,132 @@ body {
   color: var(--text-muted);
 }
 
+/* Audio & Asset Info Boxes */
+.meta-audio-info-box,
+.meta-assets-info-box {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: var(--transition-fast);
+  margin-bottom: 4px;
+}
+
+.meta-audio-info-box .audio-header,
+.meta-assets-info-box .assets-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: var(--text-primary);
+  flex-wrap: wrap;
+}
+
+.audio-icon,
+.assets-icon {
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
+.audio-label,
+.assets-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.audio-filename,
+.assets-summary {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  word-break: break-all;
+}
+
+.btn-toggle-assets {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-toggle-assets:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
+
+.assets-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 6px;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.assets-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.assets-detail-badge {
+  font-size: 0.58rem;
+  padding: 1px 4px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.assets-badge-img {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.assets-badge-js {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.assets-badge-css {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.queue-assets-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  margin-left: 6px;
+}
+
 .meta-editor-form {
   display: flex;
   flex-direction: column;

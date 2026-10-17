@@ -6,8 +6,9 @@
 const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const url = require('url');
 const { RenderEngine } = require('./engine/render-engine');
-const { parseHtmlMetadata, enrichMetadata, exportMetadataToCsv, findMatchingAudioFile } = require('./engine/metadata-parser');
+const { parseHtmlMetadata, enrichMetadata, exportMetadataToCsv, findMatchingAudioFile, detectFolderAssets } = require('./engine/metadata-parser');
 
 // Prevent background timer throttling when running hidden in tray
 app.commandLine.appendSwitch('disable-background-timer-throttling');
@@ -428,7 +429,11 @@ ipcMain.handle('engine:parseMetadata', async (event, filePath) => {
 ipcMain.handle('file:readHtmlContent', async (event, filePath) => {
   try {
     const content = await fs.promises.readFile(filePath, 'utf-8');
-    return { success: true, content, filePath };
+    const fileDir = path.dirname(filePath);
+    const fileUrl = url.pathToFileURL(filePath).href;
+    const dirUrl = url.pathToFileURL(fileDir).href + '/';
+    const detectedAssets = detectFolderAssets(filePath, content);
+    return { success: true, content, filePath, fileDir, fileUrl, dirUrl, detectedAssets };
   } catch (err) {
     return { success: false, error: err.message };
   }

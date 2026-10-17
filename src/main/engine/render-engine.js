@@ -6,6 +6,7 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const url = require('url');
 const puppeteer = require('puppeteer');
 
 function safeExistsSync(targetPath) {
@@ -261,6 +262,7 @@ class RenderEngine {
       '--disable-setuid-sandbox',
       '--disable-web-security',
       '--allow-file-access-from-files',
+      '--allow-running-insecure-content',
       '--enable-gpu',
       '--use-gl=angle',
       '--enable-webgl',
@@ -418,12 +420,32 @@ class RenderEngine {
       window.__IS_HEADLESS_RENDERER__ = true;
     });
 
-    // 5. Navigate to local HTML file
-    const fileUrl = path.isAbsolute(htmlPath) ? `file://${htmlPath.replace(/\\/g, '/')}` : htmlPath;
+    // 5. Navigate to local HTML file with standard RFC 8089 file URL
+    const fileUrl = path.isAbsolute(htmlPath) ? url.pathToFileURL(htmlPath).href : htmlPath;
     await page.goto(fileUrl, {
       waitUntil: ['load', 'networkidle0'],
       timeout: 45000
     });
+
+    // Ensure all images, styles, and web fonts in the HTML folder are completely loaded before capture
+    await page.evaluate(async () => {
+      const imgs = Array.from(document.images || []);
+      if (imgs.length > 0) {
+        await Promise.all(imgs.map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise(resolve => {
+            img.addEventListener('load', resolve, { once: true });
+            img.addEventListener('error', resolve, { once: true });
+          });
+        }));
+      }
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (e) {}
+      }
+    });
+    onLog(`[Engine] Successfully loaded local HTML and assets: ${path.basename(htmlPath)}`);
 
     // Handle background transparency & color strictly according to preset and user-selected bgMode
     const isProResAlpha = (preset === 'prores4444' || preset === 'prores' || preset === 'mov');
