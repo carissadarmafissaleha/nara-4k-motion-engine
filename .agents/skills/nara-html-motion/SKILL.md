@@ -12,6 +12,37 @@ Animasi yang dihasilkan harus siap dirender offline secara deterministik (_zero 
 
 ---
 
+## 0. Alur Kerja Wajib (Sebelum Menulis Kode)
+
+### A. Jangan Membaca File yang Sudah Ada
+- DILARANG membaca, membuka, me-list, atau meniru isi file/folder animasi yang sudah ada (mis. `.html`, aset, atau output di folder tujuan/workspace) sebagai referensi.
+- Jangan menjalankan `list_dir`, `view_file`, `grep_search`, atau perintah sejenis pada folder animasi existing untuk "mencari inspirasi" atau "mengecek gaya yang sudah ada".
+- Setiap animasi dibuat **dari nol** hanya berdasarkan skill ini dan jawaban brief dari user. Pengecualian: user secara eksplisit menyebut file tertentu untuk diedit/dijadikan acuan.
+- **Selalu buat file BARU** dengan nama sesuai permintaan (request) user, mis. user minta "logo reveal" → `logo_reveal.html`. Jika user menyebut nama file, pakai persis nama itu (ekstensi `.html`).
+- Jika user tidak menyebut nama, tanyakan (lihat pertanyaan nama file) atau turunkan dari konsep request dalam format `snake_case`. Jangan pernah menimpa/mengedit file existing; jika nama sudah dipakai, tambahkan akhiran `_v2`, `_v3`, dst. tanpa membaca file tersebut (cukup cek dengan nama saat menulis; `write_to_file` tanpa Overwrite akan gagal bila sudah ada).
+
+### B. Ajukan Pertanyaan Brief Dulu (Wajib Sebelum Eksekusi)
+Sebelum menulis kode, WAJIB bertanya kepada user (gunakan tool `ask_question` bila tersedia, dengan pilihan jawaban, atau daftar pertanyaan bernomor). Jangan menulis kode sebelum user menjawab. Lewati hanya pertanyaan yang sudah dijawab jelas oleh user di prompt.
+
+Pertanyaan minimal:
+1. **Konsep/Tema & Tujuan**: Apa yang dibuat (HUD, kinetic typography, logo reveal, background loop, infografis, partikel, dll) dan untuk apa (microstock, intro, overlay, wallpaper)?
+2. **Teks/Konten**: Teks/judul/angka/data apa yang ditampilkan (jika ada)? Bahasa?
+3. **Style Visual**: Cyberpunk neon, minimalis, glassmorphism, flat/corporate, retro, organik, dll?
+4. **Palet Warna**: Warna dominan/aksen, atau serahkan ke saya? Background gelap, terang, atau transparan (alpha)?
+5. **Font**: Sans-serif modern, monospace/tech, serif, bold display, atau font lokal tertentu (nama file)? Ingat: tanpa Google Fonts CDN.
+6. **Gaya Animasi**: Smooth/easing halus, glitch, bounce, slide, fade, typewriter, morph, partikel? Tempo lambat/sedang/cepat?
+7. **Ukuran/Resolusi**: 3840x2160 (16:9), 1920x1080, 1080x1920 (vertikal), atau 1080x1080 (kotak)?
+8. **Durasi, FPS & Loop**: Seamless loop atau one-shot dengan hold? Durasi (3/5/10 detik), FPS (30/60), dan `hold_last_frames`?
+9. **Transparansi/Alpha**: Perlu background transparan (ProRes 4444 Alpha)?
+10. **Audio**: Ada file audio yang ingin di-mux (nama file sama dengan HTML)?
+11. **Metadata Microstock**: Judul, deskripsi, keywords, dan kategori — tulis otomatis atau ada preferensi?
+12. **Nama File Output**: Nama file `.html` baru yang diinginkan (default: sesuai nama request, `snake_case`). File selalu dibuat baru, bukan menimpa.
+
+### C. Konfirmasi Singkat
+Setelah jawaban diterima, ringkas spesifikasi dalam 3-5 baris (konsep, style, font, ukuran, durasi/loop) lalu langsung eksekusi. Jika jawaban ambigu, tanyakan ulang hanya bagian yang kurang.
+
+---
+
 ## 1. Aturan Wajib (Golden Rules)
 
 1. **Zero Online CDN (100% Offline Standalone & Local Folder Assets)**:
@@ -278,7 +309,67 @@ Jika ingin menyertakan musik atau sound effects:
 
 ---
 
-## 5. Checklist Verifikasi Sebelum Menyerahkan Kode HTML
+## 5. Aturan Anti-Overlap (Layout Bersih, Tanpa Teks Bertabrakan)
+
+Hasil render TIDAK BOLEH memiliki teks/elemen yang saling tumpang tindih, terpotong, atau keluar frame, kecuali overlap disengaja sebagai efek layer (glow, bayangan, background).
+
+1. **Layout Grid & Zona Terdefinisi**:
+   - Bagi kanvas ke zona tetap (mis. title, subtitle, konten, footer) dengan konstanta `LAYOUT = { title:{x,y,w,h}, ... }`. Jangan menaruh posisi teks secara acak/ad-hoc.
+   - Safe area: margin minimal **5%** dari semua sisi (3840x2160 → ±192px horizontal, ±108px vertikal). Semua teks harus berada di dalam safe area.
+
+2. **Ukur Teks Sebelum Menggambar**:
+   - Gunakan `ctx.measureText(text).width` untuk memastikan teks muat di lebar zona. Jika melebihi, kecilkan font (loop turun per langkah) atau pecah baris (word-wrap).
+   ```javascript
+   function fitText(ctx, text, maxW, startSize, fontFamily, weight = 700) {
+     let size = startSize;
+     do {
+       ctx.font = `${weight} ${size}px ${fontFamily}`;
+       if (ctx.measureText(text).width <= maxW) break;
+       size -= 2;
+     } while (size > 12);
+     return size;
+   }
+   function wrapText(ctx, text, maxW) {
+     const words = text.split(' '), lines = [];
+     let line = '';
+     for (const w of words) {
+       const test = line ? line + ' ' + w : w;
+       if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+       else line = test;
+     }
+     if (line) lines.push(line);
+     return lines;
+   }
+   ```
+
+3. **Line-Height & Jarak Vertikal Eksplisit**:
+   - Hitung tinggi blok = `jumlahBaris * fontSize * 1.2`. Posisi blok berikutnya = `y blok sebelumnya + tinggi blok + gap (≥ 0.5 × fontSize)`.
+   - Set `ctx.textBaseline = 'top'` atau `'middle'` secara konsisten agar kalkulasi posisi akurat.
+
+4. **Cegah Tabrakan Antar Elemen Dinamis**:
+   - Untuk elemen bergerak (label, node, partikel berteks), hitung bounding box `{x,y,w,h}` dan cek tabrakan (AABB) saat inisialisasi (di luar `renderFrame`). Geser/relokasi posisi hingga tidak overlap.
+   - Gunakan jalur gerak yang amplitudonya lebih kecil dari jarak antar elemen (amplitudo < gap/2).
+   - Hindari 2 teks berbeda berada di posisi yang sama pada frame yang sama; jika bergantian, gunakan timeline (fade-out selesai sebelum fade-in dimulai, tanpa jeda tumpang tindih).
+
+5. **Animasi Teks Tidak Boleh Menabrak**:
+   - Animasi slide/scale/typewriter harus dihitung dari ukuran akhir (final bounding box), bukan ukuran saat ini; pastikan scale maksimum tetap berada dalam zona dan safe area.
+   - Transisi antar teks berurutan: `outEnd <= inStart` (dalam frame).
+
+6. **Kontras & Keterbacaan**:
+   - Teks di atas visual ramai wajib punya panel/scrim semi-transparan atau `shadowBlur` gelap di belakangnya, dan diletakkan pada lapisan paling atas (digambar terakhir).
+   - Urutan gambar: background → elemen dekoratif → konten → teks.
+
+7. **Mode HTML/CSS**: Jika memakai DOM, gunakan `display:flex`/`grid` dengan `gap`, `overflow:hidden`, `white-space`/`text-wrap` eksplisit, dan hindari `position:absolute` tanpa koordinat zona. Jangan bergantung pada font yang belum dimuat (tunggu `document.fonts.ready`).
+
+8. **Verifikasi Resolusi Lain**: Jika mendukung 1080x1920 / 1080x1080, hitung `LAYOUT` secara proporsional dari `WIDTH`/`HEIGHT`, bukan angka piksel tetap.
+
+---
+
+## 6. Checklist Verifikasi Sebelum Menyerahkan Kode HTML
+
+- [ ] Tidak ada teks/elemen yang overlap, terpotong, atau keluar safe area (5%) pada frame mana pun.
+- [ ] Semua teks diukur dengan `measureText` (fit/wrap) dan memiliki zona layout terdefinisi.
+- [ ] Teks yang bergantian memakai timeline tanpa tumpang tindih (`outEnd <= inStart`).
 
 - [ ] Baris pertama adalah `<!--METADATA { ... } METADATA-->` yang valid JSON.
 - [ ] Tidak ada referensi URL eksternal atau tag `<script src="...">`.
