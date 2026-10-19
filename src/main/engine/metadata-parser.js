@@ -648,11 +648,33 @@ async function exportMetadataToCsv(exportDir, records) {
     totalRows
   };
 }
+/**
+ * Write a single-row metadata CSV next to the exported video, named identically
+ * (e.g. clip_mp4_4k_3840x2160_60fps.mp4 -> clip_mp4_4k_3840x2160_60fps.csv)
+ * @param {string} videoPath Full path of the exported video
+ * @param {object} record Enriched metadata record
+ * @returns {Promise<string>} Path to the written CSV file
+ */
+async function exportMetadataPerFile(videoPath, record) {
+  const csvPath = path.join(
+    path.dirname(videoPath),
+    `${path.basename(videoPath, path.extname(videoPath))}.csv`
+  );
+  const row = [
+    escapeCsvField(record.filename),
+    escapeCsvField(record.title),
+    escapeCsvField(record.keywords),
+    escapeCsvField(record.category)
+  ].join(',');
+  await fs.promises.writeFile(csvPath, `Filename,Title,Keywords,Category\r\n${row}\r\n`, 'utf-8');
+  return csvPath;
+}
 
 module.exports = {
   parseHtmlMetadata,
   enrichMetadata,
   exportMetadataToCsv,
+  exportMetadataPerFile,
   filenameToTitle,
   findMatchingAudioFile,
   detectFolderAssets

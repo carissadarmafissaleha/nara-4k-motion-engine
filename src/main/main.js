@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const url = require('url');
 const { RenderEngine } = require('./engine/render-engine');
-const { parseHtmlMetadata, enrichMetadata, exportMetadataToCsv, findMatchingAudioFile, detectFolderAssets } = require('./engine/metadata-parser');
+const { parseHtmlMetadata, enrichMetadata, exportMetadataToCsv, exportMetadataPerFile, findMatchingAudioFile, detectFolderAssets } = require('./engine/metadata-parser');
 
 // Prevent background timer throttling when running hidden in tray
 app.commandLine.appendSwitch('disable-background-timer-throttling');
@@ -638,7 +638,8 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
           bgMode,
           metadata: mergedMeta,
           audioPath: matchedAudioPath,
-          copyAudioToOutput: Boolean(settings.copyAudioToOutput)
+          copyAudioToOutput: Boolean(settings.copyAudioToOutput),
+          fastMode: Boolean(settings.fastMode)
         },
         (progress) => {
           if (tray && progress && typeof progress.percent === 'number') {
@@ -666,6 +667,17 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
         outputFilename
       });
       metadataRecordsForCsv.push(enriched);
+
+      try {
+        const perFileCsv = await exportMetadataPerFile(outputPath, enriched);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('render:log', `[Metadata] ${path.basename(perFileCsv)}`);
+        }
+      } catch (perFileErr) {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('render:log', `[Metadata Error] Per-file CSV: ${perFileErr.message}`);
+        }
+      }
 
       successfulRenders++;
 

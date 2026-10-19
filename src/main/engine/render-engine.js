@@ -82,10 +82,13 @@ function resolveBrowserExecutable() {
  * FFmpeg Preset Arguments Generator
  */
 function getFfmpegArgs(preset, fps, outputPath, metadata = {}, audioPath = null, audioOptions = {}) {
+  // Fast mode (non-alpha only): frames arrive as JPEG, which is far cheaper to encode than PNG
+  const isProResPreset = (preset === 'prores4444' || preset === 'prores' || preset === 'mov');
+  const useJpegInput = Boolean(audioOptions.fastMode) && !isProResPreset;
   const commonInput = [
     '-y',
     '-f', 'image2pipe',
-    '-vcodec', 'png',
+    '-vcodec', useJpegInput ? 'mjpeg' : 'png',
     '-r', String(fps),
     '-i', '-'
   ];
@@ -134,9 +137,9 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}, audioPath = null,
       // MP4 High Bitrate 4K with AQ Mode 3 Anti-Banding & BT.709 mastering
       videoArgs = [
         '-c:v', 'libx264',
-        '-preset', 'slow',
-        '-crf', '12',
-        '-x264-params', 'aq-mode=3:aq-strength=1.1:deblock=-1,-1',
+        '-preset', audioOptions.fastMode ? 'veryfast' : 'slow',
+        '-crf', audioOptions.fastMode ? '16' : '12',
+        '-x264-params', audioOptions.fastMode ? 'aq-mode=3' : 'aq-mode=3:aq-strength=1.1:deblock=-1,-1',
         '-pix_fmt', 'yuv420p',
         '-color_primaries', 'bt709',
         '-color_trc', 'bt709',
@@ -159,7 +162,7 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}, audioPath = null,
       // MP4 Sosmed 1080p with Anti-Banding
       videoArgs = [
         '-c:v', 'libx264',
-        '-preset', 'medium',
+        '-preset', audioOptions.fastMode ? 'ultrafast' : 'medium',
         '-crf', '18',
         '-x264-params', 'aq-mode=3:aq-strength=0.9',
         '-pix_fmt', 'yuv420p',
@@ -335,7 +338,8 @@ class RenderEngine {
       holdLastFrames = 0,
       bgMode = 'checkerboard',
       audioPath = null,
-      copyAudioToOutput = false
+      copyAudioToOutput = false,
+      fastMode = false
     } = config;
 
     const ffmpegPath = resolveFfmpegPath();
@@ -557,9 +561,14 @@ class RenderEngine {
 
     // 6. Spawn FFmpeg Process
     const videoDurationSec = totalFramesToRender / fps;
+    const useJpegCapture = Boolean(fastMode) && !isTransparentCapture && !isProResAlpha;
+    if (fastMode) {
+      onLog(`[Engine] Mode Hemat Spek aktif: ${useJpegCapture ? 'JPEG capture + ' : ''}encoder lebih cepat`);
+    }
     const ffmpegArgs = getFfmpegArgs(preset, fps, outputPath, config.metadata || {}, audioPath, {
       isSeamlessLoop,
-      durationSec: videoDurationSec
+      durationSec: videoDurationSec,
+      fastMode: Boolean(fastMode)
     });
     onLog(`[FFmpeg] Spawning: ${ffmpegPath} ${ffmpegArgs.join(' ')}`);
 
@@ -625,7 +634,11 @@ class RenderEngine {
         }, tickFrame, fps);
 
         // Capture frame buffer (Zero Temp Files) - omitBackground only when transparent alpha requested
-        const frameBuffer = await page.screenshot({
+        const frameBuffer = await page.screenshot(useJpegCapture ? {
+          type: 'jpeg',
+          quality: 92,
+          captureBeyondViewport: false
+        } : {
           type: 'png',
           omitBackground: isTransparentCapture,
           captureBeyondViewport: false

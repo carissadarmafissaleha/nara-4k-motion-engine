@@ -2751,7 +2751,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         fps: globalFps,
         bgMode: state.activeBgMode || 'checkerboard',
         enableAudio: chkEnableMatchingAudio ? chkEnableMatchingAudio.checked : true,
-        copyAudioToOutput: chkCopyAudioToOutput ? chkCopyAudioToOutput.checked : false
+        copyAudioToOutput: chkCopyAudioToOutput ? chkCopyAudioToOutput.checked : false,
+        fastMode: (document.getElementById('chkFastMode') || {}).checked || false
       }
     };
 
