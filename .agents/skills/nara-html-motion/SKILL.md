@@ -32,14 +32,14 @@ Pertanyaan minimal:
 2. **Teks/Konten**: Teks/judul/angka/data apa yang ditampilkan (jika ada)? Bahasa?
 3. **Style Visual**: Cyberpunk neon, minimalis, glassmorphism, flat/corporate, retro, organik, dll?
 4. **Palet Warna**: Warna dominan/aksen, atau serahkan ke saya? Background gelap, terang, atau transparan (alpha)?
-5. **Font**: Sans-serif modern, monospace/tech, serif, bold display, atau font lokal tertentu (nama file)? Ingat: tanpa Google Fonts CDN.
-6. **Gaya Animasi**: Smooth/easing halus, glitch, bounce, slide, fade, typewriter, morph, partikel? Tempo lambat/sedang/cepat?
+5. **Font**: Sans-serif modern, monospace/tech, serif, bold display, atau font lokal tertentu (`@font-face` di `assets/fonts/`)? Mendukung Google Fonts saat online dengan fallback font lokal/sistem berkarakter.
+6. **Kombinasi Library CDN Hybrid & Gaya Animasi**: Pakai semua library Hybrid CDN (`GSAP 3 + Three.js 3D WebGL + PixiJS + Anime.js + Canvas-Confetti` dengan fallback lokal `vendor/`) atau kombinasi tertentu? Tempo lambat/sedang/cepat?
 7. **Ukuran/Resolusi**: 3840x2160 (16:9), 1920x1080, 1080x1920 (vertikal), atau 1080x1080 (kotak)?
 8. **Durasi, FPS & Loop**: Seamless loop atau one-shot dengan hold? Durasi (3/5/10 detik), FPS (30/60), dan `hold_last_frames`?
 9. **Transparansi/Alpha**: Perlu background transparan (ProRes 4444 Alpha)?
-10. **Audio**: Ada file audio yang ingin di-mux (nama file sama dengan HTML)?
+10. **Folder Aset Lokal & Audio**: Apakah membuat folder khusus beserta aset lokal (`assets/logo.svg`, `assets/badge.svg`, `assets/theme-vars.css`, `assets/telemetry-data.js`) dan/atau ada file audio se-nama yang ingin di-mux?
 11. **Metadata Microstock**: Judul, deskripsi, keywords, dan kategori — tulis otomatis atau ada preferensi?
-12. **Nama File Output**: Nama file `.html` baru yang diinginkan (default: sesuai nama request, `snake_case`). File selalu dibuat baru, bukan menimpa.
+12. **Nama File Output**: Nama folder & file `.html` baru yang diinginkan (default: sesuai nama request, `snake_case`). File selalu dibuat baru, bukan menimpa.
 
 ### C. Konfirmasi Singkat
 
@@ -49,22 +49,39 @@ Setelah jawaban diterima, tulis **style brief** singkat (lihat Bagian 6, Hukum B
 
 ## 1. Aturan Wajib (Golden Rules)
 
-1. **Hybrid Online CDN & Offline Local Fallback Architecture**:
-   - **Mode Online**: Saat perangkat terhubung ke internet, animasi bebas menggunakan CDN online resmi (seperti `cdnjs`, `jsdelivr`, `unpkg`, atau Google Fonts). NARA secara otomatis mem-cache aset yang diunduh ke disk lokal untuk persiapan rendering offline selanjutnya.
-   - **Mode Offline**: Saat koneksi internet terputus atau rendering dijalankan di lingkungan tertutup (*air-gapped*), Render Engine NARA secara cerdas mencegat (*intercept*) pemanggilan CDN dan menyajikan pustaka vendor internal (`src/assets/vendor/`: GSAP 3.x, Three.js, PixiJS, Anime.js, Canvas-Confetti) dengan latensi 0 ms tanpa error/timeout.
-   - **Pola Fallback Ganda untuk Deliverable Mandiri**:
-     Untuk file animasi yang dapat diklik dua kali (`double-click`) langsung di browser konsumen tanpa NARA, gunakan pola fallback aman:
+1. **Hybrid Online CDN, Offline Local Fallback & Lockstep Frame-Sync**:
+   - **Mode Online**: Saat perangkat terhubung ke internet, animasi bebas menggunakan CDN online resmi (`cdnjs`, `jsdelivr`, `unpkg`, atau Google Fonts). NARA otomatis mem-cache aset yang diunduh ke `generated_animations/.cdn_cache/` untuk persiapan rendering offline.
+   - **Mode Offline**: Saat koneksi internet terputus atau rendering dijalankan secara *air-gapped*, Render Engine NARA mencegat (*intercept*) pemanggilan CDN dan menyajikan pustaka vendor internal (`src/assets/vendor/`) dengan latensi 0 ms tanpa error/timeout.
+   - **Pola Dual-Fallback Wajib (Semua 5 Library Vendor Bawaan)**:
+     Gunakan tag `<script>` dengan atribut `onerror` agar animasi berjalan lancar saat Online, saat Offline di dalam NARA, maupun saat dibuka mandiri:
      ```html
-     <!-- Coba CDN Online; jika offline / gagal, otomatis alihkan ke vendor lokal -->
-     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" onerror="this.onerror=null; this.src='vendor/gsap.min.js';"></script>
+     <!-- Hybrid Online CDN dengan Automatic Offline Vendor Fallback -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" onerror="this.onerror=null;this.src='vendor/gsap.min.js';"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onerror="this.onerror=null;this.src='vendor/three.min.js';"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js" onerror="this.onerror=null;this.src='vendor/pixi.min.js';"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" onerror="this.onerror=null;this.src='vendor/anime.min.js';"></script>
+     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" onerror="this.onerror=null;this.src='vendor/canvas-confetti.min.js';"></script>
      ```
-     atau pengaman objek window:
-     ```html
-     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-     <script>window.gsap || document.write('<script src="vendor/gsap.min.js"><\/script>');</script>
-     ```
-   - Animasi juga dapat ditulis 100% mandiri menggunakan **Native Canvas 2D API**, **WebGL**, **SVG prosedural**, atau **CSS3 Keyframes/Transitions** tanpa dependensi luar apa pun.
-   - Font: Boleh memanggil Google Fonts saat online, didampingi font sistem fallback (`system-ui`, `-apple-system`, `sans-serif`, `'Plus Jakarta Sans'`), atau font lokal yang dipanggil lewat `@font-face` di folder aset animasi.
+   - **Wajib Lockstep Sync Pustaka Eksternal ke `frameIndex`**:
+     Jangan pernah membiarkan GSAP, Anime.js, Three.js, atau PixiJS berjalan dengan timer bebas! Kunci semuanya ke waktu deterministik `t = frameIndex / FPS`:
+     - **GSAP 3**: Buat timeline dalam keadaan paused `const masterGsapTl = window.gsap ? gsap.timeline({ paused: true }) : null;` dan di dalam `renderFrame(frameIndex)` panggil `if (masterGsapTl) masterGsapTl.time(frameIndex / FPS);`.
+     - **Anime.js**: Buat timeline `autoplay: false`, lalu di dalam `renderFrame(frameIndex)` panggil `if (masterAnimeTl) masterAnimeTl.seek((frameIndex / FPS) * 1000);`.
+     - **Three.js (3D WebGL) & PixiJS (2D WebGL)**: Update rotasi/posisi mesh/sprite berdasarkan `t` atau `loopAngle` di dalam `renderFrame(frameIndex)`, panggil `threeRenderer.render(threeScene, threeCamera)` / `pixiApp.render()`, lalu kompositkan kanvasnya ke kanvas 4K utama dengan `ctx.drawImage(...)`.
+
+   - **Integrasi Folder Aset Lokal (`assets/`) & Preloader**:
+     - NARA memindai folder yang sama dengan file HTML hingga kedalaman 2 subfolder (`assets/`, `images/`, `fonts/`, `css/`, `js/`) lewat `detectFolderAssets()` dan menunggu seluruh `document.images` serta `document.fonts.ready` sebelum merender Frame 0.
+     - Preload seluruh gambar/vektor lokal (`assets/logo.svg`, `assets/chip_core.svg`, `assets/badge_verified.svg`, `.png`, `.webp`) di dalam kontainer DOM tersembunyi `<div id="nara-local-assets" style="display:none">` dan gambar ke kanvas menggunakan fungsi aman disertai fallback prosedural:
+       ```javascript
+       function drawLocalImageOrFallback(imgId, cx, cy, w, h, fallbackDrawFn) {
+         const img = document.getElementById(imgId);
+         if (img && img.complete && img.naturalWidth > 0) {
+           ctx.drawImage(img, cx - w / 2, cy - h / 2, w, h);
+         } else if (typeof fallbackDrawFn === 'function') {
+           fallbackDrawFn(cx, cy, w, h);
+         }
+       }
+       ```
+     - Sertakan stylesheet lokal (`<link rel="stylesheet" href="assets/theme-vars.css" />`) dan modul data JS lokal (`<script src="assets/telemetry-data.js"></script>`) bila membuat paket folder animasi lengkap.
 
 2. **Wajib Memiliki Header Metadata JSON (Line 1)**:
    - Harus dimulai tepat di baris pertama file dengan blok komentar:
@@ -392,9 +409,9 @@ Hasil render TIDAK BOLEH memiliki teks/elemen yang saling tumpang tindih, terpot
 
 ---
 
-## 6. Hukum Kreatif (dari , disesuaikan untuk NARA)
+## 6. Hukum Kreatif (Disesuaikan untuk Arsitektur Hybrid NARA)
 
-Aturan teknis NARA (Bagian 1) SELALU menang bila bentrok. Yang berbeda dari : **tanpa GSAP/CDN, tanpa autoplay-player, tanpa `?debug`, tanpa ekspor MP4 sendiri**. Semua waktu = fungsi murni dari `frameIndex` (`t = frameIndex / fps`). Easing, timeline, dan stagger ditulis manual (Canvas/CSS dihitung dari `t`). Prinsip kreatif di bawah ini tetap berlaku penuh.
+Aturan teknis NARA (Bagian 1) SELALU menang bila bentrok. Yang berbeda dari web player biasa: **tanpa autoplay-player bebas, tanpa `?debug`, tanpa ekspor MP4 sendiri**. Semua waktu = fungsi murni dari `frameIndex` (`t = frameIndex / fps`). Jika menggunakan pustaka **Hybrid CDN (GSAP, Three.js, PixiJS, Anime.js, Confetti)**, semuanya WAJIB menggunakan tag dual-fallback (`onerror="this.onerror=null;this.src='vendor/...';"`) dan dikunci secara *lockstep* ke `t = frameIndex / fps` (`masterGsapTl.time(t)`, `masterAnimeTl.seek(t * 1000)`, `threeRenderer.render(scene, camera)`). Prinsip kreatif di bawah ini tetap berlaku penuh.
 
 ### B1. Ini video, bukan slide (anti-PPT)
 
@@ -413,11 +430,11 @@ Sebelum menulis kode (selain loop sederhana), tulis dan tunjukkan ke user:
 
 1. Tema/produk + tiga kata sifat perasaan.
 2. Palet: satu warna utama dari brand/tema, satu latar, satu aksen (hex + sumber tiap warna).
-3. Font display yang punya karakter (bukan Poppins/Inter/Roboto/Montserrat/Arial) + font pendamping. Hanya font sistem atau `@font-face` lokal (tanpa Google Fonts CDN).
+3. Font display yang punya karakter (bukan Poppins/Inter/Roboto/Montserrat/Arial) + font pendamping. Gunakan `@font-face` lokal (`assets/fonts/...` atau `assets/theme-vars.css`), Google Fonts (saat online), serta fallback font sistem berkarakter.
 4. Penekanan teks: tanpa sorotan, atau satu bentuk sorotan saja.
 5. Bahasa gerak latar (B3) dan tanda tangan gerak (satu gerak identitas yang diulang).
 6. Permukaan latar >= 2 lapis (dasar + cahaya/tekstur/blob/grain), bukan flat.
-7. Gaya render objek satu keluarga (flat, clay, glossy, kaca, isometrik, garis neon, dll).
+7. Gaya render objek satu keluarga (flat, clay, glossy, kaca, isometrik, 3D WebGL Three.js, garis neon, dll).
 8. Satu momen istimewa (efek termahal dipakai sekali).
 
 **Gaya lahir dari tema**, bukan dari boilerplate Bagian 2 (warna, partikel, dan font di sana hanyalah PLACEHOLDER). Jangan membuat semua animasi gelap + neon cyan + glow. Latar tidak default gelap; pilih dari arah: sinematik gelap, poster color-block, editorial terang, kertas & cetak, retro/analog, brutalis mono, pastel ceria, mewah gelap, flat pop, grainy gradient. Referensi dari user = ambil ritme dan energi, bukan palet/font/tata letak/kalimat.
@@ -467,12 +484,12 @@ Selaras dengan Aturan Emas #3-#4: tanpa `Date.now()`, `performance.now()`, `Math
 - [ ] Tidak ada teks/elemen yang overlap, terpotong, atau keluar safe area (5%) pada frame mana pun.
 - [ ] Semua teks diukur dengan `measureText` (fit/wrap) dan memiliki zona layout terdefinisi.
 - [ ] Teks yang bergantian memakai timeline tanpa tumpang tindih (`outEnd <= inStart`).
-
 - [ ] Baris pertama adalah `<!--METADATA { ... } METADATA-->` yang valid JSON.
-- [ ] Tidak ada referensi URL eksternal atau tag `<script src="...">`.
+- [ ] Seluruh tag `<script>` library CDN (GSAP, Three.js, PixiJS, Anime.js, Confetti) menggunakan pola **Hybrid Dual-Fallback** (`onerror="this.onerror=null;this.src='vendor/...';"`) dan dikunci secara *lockstep* ke `frameIndex`.
+- [ ] Aset folder lokal (`assets/*.svg`, `.png`, `.webp`, `.css`, `.js`) di-preload di `#nara-local-assets` dan digambar melalui helper aman (`drawLocalImageOrFallback`) dengan fallback prosedural.
 - [ ] Resolusi kanvas diset ke 3840x2160 (atau resolusi target).
 - [ ] Fungsi `window.__renderTick(frameIndex, targetFps)` terdefinisi.
-- [ ] Preview loop dilindungi oleh pengecekan `!window.__isNaraHeadless`.
+- [ ] Preview loop dilindungi oleh pengecekan `!window.__isNaraHeadless && !window.__IS_HEADLESS_RENDERER__`.
 - [ ] Tidak ada pemanggilan `Math.random()` tanpa seed di dalam `renderFrame()`.
 - [ ] Desain visual memiliki estetika komersial premium (gradasi warna modern, pencahayaan, kontras tajam).
 - [ ] Style brief (tema, palet dari brand, font berkarakter, bahasa latar, tanda tangan gerak, momen istimewa) ditulis dan disetujui sebelum kode (kecuali loop sederhana).
@@ -485,9 +502,9 @@ Selaras dengan Aturan Emas #3-#4: tanpa `Date.now()`, `performance.now()`, `Math
 
 ---
 
-## 8. Referensi Tambahan ( )
+## 8. Referensi Tambahan
 
-Lampiran A-F di akhir file ini berisi resep detail dari . Baca hanya yang relevan dengan jenis pekerjaan:
+Lampiran A-F di akhir file ini berisi resep detail desain adegan. Baca hanya yang relevan dengan jenis pekerjaan:
 
 | Lampiran             | Kapan dibaca                                                                      |
 | -------------------- | --------------------------------------------------------------------------------- |
@@ -498,16 +515,16 @@ Lampiran A-F di akhir file ini berisi resep detail dari . Baca hanya yang releva
 | `kartun-panggung.md` | Explainer kartun panggung (rig sendi, kamera per panggung)                        |
 | `architecture.md`    | Alasan di balik struktur kamera/timeline                                          |
 
-**Aturan adaptasi (WAJIB):** berkas itu ditulis untuk GSAP/CDN. Saat memakainya di NARA:
+**Aturan adaptasi (WAJIB) saat memakai Lampiran di NARA:**
 
-- Jangan memuat GSAP atau CDN apa pun. Terjemahkan `tl.time()` menjadi `t = frameIndex / fps` dan tulis easing/stagger manual.
-- Abaikan instruksi player, autoplay, `?debug=1`, `snap.mjs`, `export-frames.mjs`, `serve.py`, dan bridge After Effects. NARA merender sendiri.
-- Ukuran stage mengikuti metadata NARA (bukan 1920x1080 tetap); skala nilai piksel secara proporsional.
+- Jika menggunakan GSAP, Three.js, PixiJS, Anime.js, atau Confetti, gunakan pola **Hybrid Online CDN + Offline Vendor Fallback (`vendor/*.min.js`)** dan kunci waktunya secara *lockstep* ke `t = frameIndex / fps` (misal `masterGsapTl.time(t)`, `masterAnimeTl.seek(t * 1000)`), atau tulis kurva easing/stagger deterministik dari `t`.
+- Abaikan instruksi player mandiri, autoplay bebas, `?debug=1`, `snap.mjs`, `export-frames.mjs`, `serve.py`, dan bridge After Effects. NARA merender sendiri melalui `window.__renderTick(frameIndex, targetFps)`.
+- Ukuran stage mengikuti metadata NARA (mis. 3840x2160); gunakan unit skala proporsional `U = WIDTH / 1920`.
 - Aturan teknis di Bagian 1 selalu menang bila bentrok.
 
 ---
 
-## 9. Starter Opener NARA (Canvas 2D, tanpa GSAP)
+## 9. Starter Opener & Hybrid Master NARA (Canvas 2D + Hybrid CDN + Folder Aset)
 
 Titik awal opener/promo/kinetic typography. Salin ke file BARU, isi style brief, ganti token warna/font dan RUNDOWN. Placeholder abu-abu wajib diganti.
 
@@ -532,8 +549,8 @@ METADATA-->
     <meta charset="UTF-8" />
     <title>NARA Starter Opener</title>
     <!--
-  STARTER OPENER / PROMO / BUMPER / KINETIC TYPOGRAPHY untuk NARA (port dari starter  ).
-  ARSITEKTUR + PERKAKAS, bukan gaya dan bukan kerangka. Tanpa GSAP, tanpa CDN, tanpa WebGL.
+  STARTER OPENER / PROMO / BUMPER / KINETIC TYPOGRAPHY untuk NARA.
+  ARSITEKTUR + PERKAKAS, bukan gaya dan bukan kerangka. Mendukung Hybrid CDN (GSAP/Three/Pixi/Anime/Confetti) + Folder Aset Lokal.
 
   ===== STYLE BRIEF - isi dulu, baru sentuh kode (nara skill.md Bagian 6, B2) =====
   Tema/produk + 3 kata sifat : ____________________
@@ -1009,7 +1026,7 @@ METADATA-->
 
 # Lampiran A: anti-ppt.md ( )
 
-> Ditulis untuk GSAP/CDN. Terapkan aturan adaptasi Bagian 8: tanpa GSAP/CDN, `tl.time()` = `frameIndex / fps`, abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
+> Terapkan aturan adaptasi Bagian 8: gunakan Hybrid CDN dengan fallback lokal (`vendor/*.min.js`) dan kunci waktu secara lockstep ke `t = frameIndex / fps` (`masterGsapTl.time(t)`), abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
 
 # Anti-PPT — hukum desain adegan
 
@@ -1126,7 +1143,7 @@ Screenshot sebuah frame lalu tanya:
 
 # Lampiran B: opener-konsep.md ( )
 
-> Ditulis untuk GSAP/CDN. Terapkan aturan adaptasi Bagian 8: tanpa GSAP/CDN, `tl.time()` = `frameIndex / fps`, abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
+> Terapkan aturan adaptasi Bagian 8: gunakan Hybrid CDN dengan fallback lokal (`vendor/*.min.js`) dan kunci waktu secara lockstep ke `t = frameIndex / fps` (`masterGsapTl.time(t)`), abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
 
 # Konsep opener — pilih kerangka, jangan warisi kerangka
 
@@ -1976,7 +1993,7 @@ Kerangka yang lahir dari produk:
 
 # Lampiran C: techniques.md ( )
 
-> Ditulis untuk GSAP/CDN. Terapkan aturan adaptasi Bagian 8: tanpa GSAP/CDN, `tl.time()` = `frameIndex / fps`, abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
+> Terapkan aturan adaptasi Bagian 8: gunakan Hybrid CDN dengan fallback lokal (`vendor/*.min.js`) dan kunci waktu secara lockstep ke `t = frameIndex / fps` (`masterGsapTl.time(t)`), abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
 
 # Teknik — resep efek yang sudah teruji
 
@@ -3035,7 +3052,7 @@ tl.fromTo(
 
 # Lampiran D: explainer.md ( )
 
-> Ditulis untuk GSAP/CDN. Terapkan aturan adaptasi Bagian 8: tanpa GSAP/CDN, `tl.time()` = `frameIndex / fps`, abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
+> Terapkan aturan adaptasi Bagian 8: gunakan Hybrid CDN dengan fallback lokal (`vendor/*.min.js`) dan kunci waktu secara lockstep ke `t = frameIndex / fps` (`masterGsapTl.time(t)`), abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
 
 # Explainer — cerita bergambar, bukan promo
 
@@ -3619,7 +3636,7 @@ jangan hentikan latar untuk membaca teks; perlambat ke 40 % saja.
 
 # Lampiran E: kartun-panggung.md ( )
 
-> Ditulis untuk GSAP/CDN. Terapkan aturan adaptasi Bagian 8: tanpa GSAP/CDN, `tl.time()` = `frameIndex / fps`, abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
+> Terapkan aturan adaptasi Bagian 8: gunakan Hybrid CDN dengan fallback lokal (`vendor/*.min.js`) dan kunci waktu secara lockstep ke `t = frameIndex / fps` (`masterGsapTl.time(t)`), abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
 
 # Kartun panggung — explainer kartun edukasi flat, satu panggung per adegan
 
@@ -3863,7 +3880,7 @@ ada `tl.to(<grup ber-translate>,{x|y})`.
 
 # Lampiran F: architecture.md ( )
 
-> Ditulis untuk GSAP/CDN. Terapkan aturan adaptasi Bagian 8: tanpa GSAP/CDN, `tl.time()` = `frameIndex / fps`, abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
+> Terapkan aturan adaptasi Bagian 8: gunakan Hybrid CDN dengan fallback lokal (`vendor/*.min.js`) dan kunci waktu secara lockstep ke `t = frameIndex / fps` (`masterGsapTl.time(t)`), abaikan player/debug/snap/export/AE bridge. Aturan Bagian 1 selalu menang.
 
 # Arsitektur — struktur proyek dan alasannya
 

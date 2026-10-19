@@ -337,17 +337,18 @@ Render batch puluhan hingga ratusan video 4K kini dapat berjalan tenang di latar
 
 ### 8. Fitur Generate with AI (AI Motion Studio) 🤖✨
 
-NARA kini terintegrasi dengan **AI Motion Synthesizer Engine** mutakhir yang memungkinkan kreator memproduksi motion graphics komersial kelas studio 4K hanya dengan menuliskan **tema visual** dan **durasi waktu**:
+NARA kini terintegrasi dengan **AI Motion Synthesizer Engine** mutakhir ([`src/renderer/generators/ai-generator.js`](src/renderer/generators/ai-generator.js)) yang memungkinkan kreator memproduksi motion graphics komersial kelas studio 4K hanya dengan menuliskan **tema visual**, **durasi waktu**, serta melampirkan **aset lokal**:
 
 - **Koneksi Multi-Provider AI (Google Gemini & OpenAI)**:
-  - **Google Gemini API** *(Rekomendasi)*: Menggunakan model `gemini-2.5-flash`, `gemini-1.5-flash`, atau `gemini-1.5-pro` dengan latensi ultra-cepat dan kemampuan sintesis Canvas 2D / WebGL yang sangat presisi. Link langsung disediakan di aplikasi untuk mendapatkan API Key Gemini gratis dari Google AI Studio.
-  - **OpenAI API**: Mendukung `gpt-4o-mini` dan `gpt-4o` dengan pemahaman konsep motion design mendalam.
+  - **Google Gemini API** *(Rekomendasi)*: Menggunakan model `gemini-2.5-flash`, `gemini-2.0-flash`, atau `gemini-1.5-pro` dengan latensi ultra-cepat, dukungan multimodal vision (lampiran gambar/logo), dan sintesis Canvas 2D / WebGL yang presisi.
+  - **OpenAI API**: Mendukung `gpt-4o-mini`, `gpt-4o`, dan endpoint kompatibel OpenAI.
 - **Penyimpanan API Key Aman di LocalStorage**:
   - API Key disimpan secara lokal di perangkat Anda (`localStorage`) dan **tidak pernah dikirim ke server pihak ketiga mana pun**. Aplikasi berkomunikasi langsung dari aplikasi desktop ke endpoint resmi Google / OpenAI.
-- **100% Sesuai Arsitektur Standar NARA**:
-  - **Hybrid CDN & Zero External Dependencies**: Mendukung grafis native murni maupun library kaya (GSAP, Three.js, PixiJS, Anime.js) dengan sistem Request Interception bawaan NARA yang otomatis memuat dari CDN Online saat terkoneksi internet, dan beralih ke vendor lokal saat offline tanpa error.
-  - **Deterministic Virtual Clock**: Otomatis menyertakan hook `window.__renderTick(frameIndex, targetFps)` serta perhitungan trigonometri periodik sehingga animasi dapat di-scrub dan di-render frame demi frame tanpa patah (*seamless loop*).
-  - **Embedded JSON Metadata**: Dokumen otomatis dilengkapi header komentar `<!--METADATA { ... } METADATA-->` yang berisi judul komersial, deskripsi, keywords microstock, FPS, total frames, dan kategori.
+- **Master System Prompt Berstandar Broadcast (Anti-PPT & Anti-Overlap)**:
+  - **Hybrid CDN & Lockstep Frame-Sync**: Menginstruksikan AI menyertakan pustaka animasi kaya (`GSAP 3`, `Three.js`, `PixiJS`, `Anime.js`, `Canvas-Confetti`) dengan tag dual-fallback (`onerror="this.onerror=null;this.src='vendor/...';"`), serta mengunci seluruh timeline eksternal ke waktu deterministik `t = frameIndex / FPS`.
+  - **Integrasi Aset Multimodal & Folder Aset Lokal**: Mendukung lampiran gambar/logo secara langsung maupun pemanggilan aset dari subfolder lokal (`assets/logo.svg`, `assets/theme-vars.css`, `assets/telemetry-data.js`) lengkap dengan preloader `#nara-local-assets` dan fallback prosedural `drawLocalImageOrFallback()`.
+  - **Hukum Kreatif Anti-PPT & Anti-Overlap**: Menerapkan rig kamera 2.5D/3D satu dunia (`applyCamera`), latar bergerak $\ge 3$ lapis (gradien + objek 3D/volumetrik + partikel & grain seeded `mulberry32`), margin safe area 5%, dan pengukuran teks otomatis (`ctx.measureText`).
+  - **Deterministic Virtual Clock & Metadata Header**: Otomatis menyertakan hook `window.__renderTick(frameIndex, targetFps)` dan blok komentar `<!--METADATA { ... } METADATA-->` di baris pertama.
 - **Inspirasi Cepat (Quick Inspiration Chips)**:
   - Tersedia tombol inspirasi sekali klik untuk ide-ide motion graphics populer:
     - ⚡ *Cyberpunk HUD* (Telemetry & Hologram)
@@ -364,38 +365,34 @@ NARA kini terintegrasi dengan **AI Motion Synthesizer Engine** mutakhir yang mem
 
 ---
 
-### 9. Arsitektur Hybrid CDN & Intelligent Offline Fallback Engine ⚡🌐
+### 9. Arsitektur Hybrid CDN, Lockstep Sync & Deteksi Folder Aset Lokal ⚡🌐📁
 
-NARA menghadirkan sistem **Hybrid CDN** revolusioner yang memecahkan keterbatasan antara fleksibilitas library modern dan keandalan rendering offline:
+NARA menghadirkan sistem **Hybrid CDN + Local Folder Asset Pipeline** yang menggabungkan kekuatan library web modern, aset lokal eksternal, dan keandalan rendering offline 100%:
 
 - **🟢 Mode Online (Cloud CDN Aktif & Auto-Cached)**:
-  - Saat komputer terkoneksi ke internet, animasi web dapat memanggil link CDN resmi (seperti `cdnjs.cloudflare.com`, `cdn.jsdelivr.net`, `unpkg.com`, atau `fonts.googleapis.com`).
+  - Saat komputer terkoneksi ke internet, animasi web dapat memanggil link CDN resmi (`cdnjs.cloudflare.com`, `cdn.jsdelivr.net`, `unpkg.com`, atau `fonts.googleapis.com`).
   - Seluruh pustaka eksternal yang diunduh secara otomatis dicache ke disk lokal (`generated_animations/.cdn_cache/`) untuk mempersiapkan rendering offline di masa mendatang.
-- **🟡 Mode Offline (Local Vendor Fallback Otomatis)**:
-  - Saat tidak ada koneksi internet (atau rendering pada workstation *air-gapped*), Puppeteer Render Engine NARA secara cerdas **mencegat (*intercept*)** permintaan CDN tersebut pada level jaringan.
+- **🟡 Mode Offline (Local Vendor Fallback Otomatis 0 ms)**:
+  - Saat tidak ada koneksi internet (atau rendering pada workstation *air-gapped*), Puppeteer Render Engine NARA secara cerdas **mencegat (*intercept*)** permintaan CDN atau path `vendor/*.min.js` pada level jaringan.
   - NARA langsung menyajikan file vendor lokal (`src/assets/vendor/`) dengan **latensi 0 ms**:
-    - **GSAP 3.12.5** (GreenSock Motion Library)
-    - **Three.js r128** (WebGL 3D Engine)
-    - **PixiJS 7.4.2** (High-Performance 2D WebGL)
-    - **Anime.js 3.2.1** (Lightweight Animation Engine)
-    - **Canvas-Confetti 1.9.3** (Procedural Particle Celebration)
-  - Proses render 4K dijamin tidak akan pernah mengalami *timeout*, *network freeze*, atau layar kosong (*blank screen*) akibat putus koneksi internet!
-- **Pola Fallback Ganda untuk File Mandiri (*Self-Contained*)**:
-  Bagi kreator yang menjual file animasi HTML langsung ke pembeli microstock agar bisa dibuka langsung di browser tanpa NARA:
+    - **GSAP 3.12.5** (`gsap.min.js` — GreenSock Motion Library)
+    - **Three.js r128** (`three.min.js` — WebGL 3D Engine)
+    - **PixiJS 7.3.2** (`pixi.min.js` — High-Performance 2D WebGL)
+    - **Anime.js 3.2.2** (`anime.min.js` — Lightweight Animation Engine)
+    - **Canvas-Confetti 1.9.2** (`canvas-confetti.min.js` — Procedural Particle Celebration)
+- **🔒 Pola Dual-Fallback & Lockstep Frame-Sync**:
+  Gunakan pola tag `<script>` dual-fallback berikut dan kunci timeline library ke `t = frameIndex / FPS` di dalam `renderFrame(frameIndex)`:
   ```html
-  <!-- Coba CDN Online terlebih dahulu; jika offline, otomatis alihkan ke vendor lokal -->
-  <script 
-    src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" 
-    onerror="this.onerror=null; this.src='vendor/gsap.min.js';">
-  </script>
+  <!-- 1. Hybrid Online CDN dengan Automatic Offline Vendor Fallback -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" onerror="this.onerror=null;this.src='vendor/gsap.min.js';"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onerror="this.onerror=null;this.src='vendor/three.min.js';"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js" onerror="this.onerror=null;this.src='vendor/pixi.min.js';"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" onerror="this.onerror=null;this.src='vendor/anime.min.js';"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" onerror="this.onerror=null;this.src='vendor/canvas-confetti.min.js';"></script>
   ```
-  atau menggunakan penjaga objek `window`:
-  ```html
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script>
-    window.gsap || document.write('<script src="vendor/gsap.min.js"><\/script>');
-  </script>
-  ```
+- **📁 Deteksi & Preloading Folder Aset Lokal (`detectFolderAssets`)**:
+  - Mesin [`metadata-parser.js`](src/main/engine/metadata-parser.js) otomatis memindai folder yang sama dengan file `.html` hingga kedalaman **2 level subfolder** (misal `assets/`, `images/`, `fonts/`, `css/`, `js/`) untuk mendeteksi gambar (`.svg`, `.png`, `.webp`, `.jpg`), stylesheet (`.css`), dan script data (`.js`).
+  - Sebelum menangkap Frame 0, [`render-engine.js`](src/main/engine/render-engine.js) secara ketat menunggu seluruh `document.images` (`img.complete`) dan `document.fonts.ready` selesai dimuat agar tidak ada gambar atau font yang gagal tampil di frame awal.
 
 ---
 
@@ -417,7 +414,7 @@ NARA menghadirkan sistem **Hybrid CDN** revolusioner yang memecahkan keterbatasa
 
 ---
 
-### 10. Multi-Bahasa Global (10 Bahasa - Default EN) & Log Terminal Reaktif
+### 11. Multi-Bahasa Global (10 Bahasa - Default EN) & Log Terminal Reaktif
 
 Pilih bahasa antarmuka secara instan melalui dropdown kode ID bahasa ringkas di bar navigasi atas (Default: **`EN`**). **Seluruh baris log streaming di konsol terminal bawah otomatis terlokalisasi dan berubah secara real-time saat bahasa diganti:**
 
@@ -454,23 +451,27 @@ Pilih bahasa antarmuka secara instan melalui dropdown kode ID bahasa ringkas di 
 motionjs/
 ├── package.json                              # Konfigurasi dependensi NARA
 ├── README.md                                 # Dokumentasi & panduan instalasi
+├── .agents/skills/nara-html-motion/
+│   └── SKILL.md                              # Standar aturan teknis & kreatif pembuatan HTML 4K NARA
 ├── extension/                                # NARA Companion - Browser Extension (Manifest V3)
 │   ├── manifest.json                         # Ekstensi Chrome / Edge
 │   ├── popup.html                            # Antarmuka popup shadcn/ui
 │   ├── popup.css                             # Styling shadcn/ui Monochrome Zinc
 │   ├── popup.js                              # Virtual clock scrubber, inspector & download
 │   └── icons/                                # Ikon ekstensi (16x16, 48x48, 128x128)
-├── generated_animations/                     # Folder penyimpanan file hasil Studio Generator
-├── examples/                                 # Contoh file animasi HTML siap render
-│   ├── cyberpunk-portal-loop.html
-│   └── quantum-logo-reveal-oneshot.html
+├── generated_animations/                     # Folder penyimpanan file hasil Studio & Paket Aset
+│   ├── .cdn_cache/                           # Cache otomatis resource CDN saat online
+│   └── fintech_ai_ecosystem_4k/              # Contoh paket animasi 4K Hybrid CDN + Folder Aset Lokal
+│       ├── fintech_ai_ecosystem_4k.html
+│       └── assets/                           # Aset lokal (logo.svg, chip_core.svg, badge_verified.svg, css, js)
 └── src/
-    ├── assets/                               # Aset ikon aplikasi & system tray (16x16, 48x48, 128x128)
+    ├── assets/                               # Aset ikon aplikasi & bundle pustaka vendor offline
+    │   └── vendor/                           # Fallback lokal 0ms (gsap, three, pixi, anime, canvas-confetti)
     ├── main/
     │   ├── main.js                           # Electron lifecycle, System Tray, & IPC handlers
     │   └── engine/
-    │       ├── render-engine.js              # Streaming memory pipeline, Audio mixer & FFmpeg pipe
-    │       └── metadata-parser.js            # Parser metadata HTML, deteksi audio, & CSV generator
+    │       ├── render-engine.js              # Streaming memory pipeline, Hybrid CDN Interceptor & FFmpeg pipe
+    │       └── metadata-parser.js            # Parser metadata HTML, deteksi folder aset/audio, & CSV exporter
     ├── preload/
     │   └── preload.js                        # ContextBridge secure IPC bridge (Tray & Window APIs)
     └── renderer/
@@ -478,7 +479,7 @@ motionjs/
         ├── style.css                         # Desain shadcn/ui Monochrome Zinc Architecture
         ├── app.js                            # Controller utama, live preview audio sync, & i18n
         └── generators/                       # Generator animasi komersial & AI Engine
-            ├── ai-generator.js               # AI Motion Synthesizer (Gemini & OpenAI API)
+            ├── ai-generator.js               # AI Motion Synthesizer (Master Prompt Gemini & OpenAI API)
             ├── kinetic-typography.js
             ├── particle-fx.js
             ├── isometric-3d.js

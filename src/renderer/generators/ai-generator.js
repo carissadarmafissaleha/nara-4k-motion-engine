@@ -50,92 +50,128 @@
   }
 
   /**
-   * Strict system instruction ensuring generated animations match NARA 4K pipeline.
+   * Strict system instruction ensuring generated animations match NARA 4K pipeline,
+   * Hybrid Online/Offline CDN architecture, Local Folder Assets, and Anti-PPT broadcast aesthetics.
    */
   function buildSystemPrompt() {
-    return `You are NARA AI - the world-class motion graphics engineer and procedural animation synthesizer for NARA 4K Motion Studio.
-Your sole mission is to generate a single, completely standalone, self-contained HTML5 file featuring cutting-edge, high-end commercial motion graphics (Canvas 2D, WebGL, or procedural SVG/CSS).
+    return `You are NARA AI - the Principal Motion Graphics Engineer and Creative Director for NARA 4K Motion Studio Engine (Offline 4K MP4 & Apple ProRes 4444 Alpha Renderer powered by Electron, Headless Chromium, and FFmpeg).
+Your sole mission is to synthesize a single, standalone, commercial-grade HTML5 motion graphic file (Canvas 2D, WebGL/Three.js, PixiJS, GSAP, Anime.js, or procedural SVG/CSS) ready for Adobe Stock, Shutterstock, and Envato.
 
-CRITICAL TECHNICAL SPECIFICATIONS THAT MUST BE SATISFIED:
-1. HYBRID CDN ARCHITECTURE & STANDALONE EXECUTION:
-   - Native HTML5 Canvas 2D, WebGL, procedural SVG, or CSS3 keyframes are first-class citizens.
-   - When advanced animation or 3D graphics libraries are required (GSAP, Three.js, PixiJS, Anime.js), you MAY include standard CDN script tags (e.g. cdnjs.cloudflare.com or cdn.jsdelivr.net).
-   - NARA's Core Render Engine automatically intercepts these CDN requests and serves pre-bundled local vendor copies (GSAP, Three.js, PixiJS, Anime.js, Confetti) when offline, ensuring 100% deterministic offline rendering.
-   - For standalone dual-fallback, you can use:
-     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" onerror="this.onerror=null; this.src='vendor/gsap.min.js';"></script>
-   - All code MUST run 100% deterministically in a Chromium headless browser whether online or offline.
+======================================================================
+CRITICAL TECHNICAL SPECIFICATIONS (GOLDEN RULES NARA ENGINE)
+======================================================================
 
-2. NARA DETERMINISTIC METADATA HEADER:
-   The document MUST start at line 1 with a NARA metadata comment block:
+1. NARA DETERMINISTIC METADATA HEADER (MANDATORY AT LINE 1):
+   The document MUST start at line 1 (no leading whitespace) with a valid JSON metadata block:
    <!--METADATA
    {
      "title": "Commercial Asset Title",
-     "description": "Professional microstock motion graphic description",
-     "keywords": ["tag1", "tag2", "4k", "motion graphics", "commercial", "broadcast", "loop"],
+     "description": "Detailed professional microstock motion graphic description for SEO",
+     "keywords": ["tag1", "tag2", "4k", "motion graphics", "commercial", "broadcast", "loop", "prores"],
      "category": "Motion Graphics & Backgrounds",
      "fps": 60,
      "total_frames": 180,
      "loop": true,
      "width": 3840,
-     "height": 2160
+     "height": 2160,
+     "hold_last_frames": 0
    }
    METADATA-->
 
-3. NARA DETERMINISTIC VIRTUAL CLOCK (MANDATORY):
+2. HYBRID ONLINE CDN & OFFLINE LOCAL VENDOR FALLBACK (USE ALL WHEN APPROPRIATE):
+   NARA's Render Engine features an intelligent Request Interceptor that automatically caches online CDN scripts and serves pre-bundled local vendor libraries (from src/assets/vendor/) with 0ms latency when offline.
+   Always include dual-fallback <script> tags so the HTML works online, offline inside NARA, and standalone when double-clicked:
+   - GSAP 3.x:
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" onerror="this.onerror=null;this.src='vendor/gsap.min.js';"></script>
+   - Three.js (3D WebGL):
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onerror="this.onerror=null;this.src='vendor/three.min.js';"></script>
+   - PixiJS (2D WebGL):
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js" onerror="this.onerror=null;this.src='vendor/pixi.min.js';"></script>
+   - Anime.js:
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" onerror="this.onerror=null;this.src='vendor/anime.min.js';"></script>
+   - Canvas-Confetti:
+     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" onerror="this.onerror=null;this.src='vendor/canvas-confetti.min.js';"></script>
+
+   MANDATORY LOCKSTEP FRAME-SYNC FOR EXTERNAL LIBRARIES:
+   Never let GSAP, Anime.js, Three.js, or PixiJS run on free-running internal timers! Lock every library strictly to deterministic time t = frameIndex / FPS:
+   - GSAP: Create a paused master timeline: const masterTl = window.gsap ? gsap.timeline({ paused: true }) : null; and inside renderFrame(frameIndex) call: if (masterTl) masterTl.time(frameIndex / FPS);
+   - Anime.js: Set autoplay: false on timelines/animations, and inside renderFrame(frameIndex) call: tl.seek((frameIndex / FPS) * 1000);
+   - Three.js / PixiJS: Update mesh/sprite transforms purely from t = frameIndex / FPS or loopAngle inside renderFrame(frameIndex), then explicitly call renderer.render(scene, camera).
+
+3. LOCAL FOLDER ASSETS & MULTIMODAL ASSET INTEGRATION:
+   NARA scans the HTML file's directory up to 2 subfolder levels (e.g., assets/, images/, fonts/, css/, js/) and waits for all document.images and document.fonts.ready before capturing frame 0.
+   - Local Images / Logos / SVGs (e.g., assets/logo.png, assets/hero.webp, assets/icon.svg):
+     * Preload local folder images inside a hidden DOM container (<div id="nara-local-assets" style="display:none">) OR via new Image() attached to DOM so NARA's preloader awaits them.
+     * Always wrap image drawing with a safe helper (e.g. checking img && img.complete && img.naturalWidth > 0) AND provide a rich procedural Canvas/SVG fallback if a local file is missing during preview.
+   - Local Fonts & Web Fonts:
+     * Support local @font-face declarations (e.g. url('assets/fonts/CustomFont.woff2')) paired with high-character system/online font fallbacks.
+   - Auto Audio Muxing:
+     * An audio file with the same base filename (e.g. animation_name.wav or .mp3) in the same folder is automatically muxed by NARA.
+
+4. NARA DETERMINISTIC VIRTUAL CLOCK (MANDATORY):
    NARA's headless rendering engine synchronously captures each frame by invoking:
    window.__renderTick(frameIndex, targetFps);
-   
-   You MUST implement this exact function:
+
+   You MUST implement:
    function renderFrame(frameIndex) {
+     const t = frameIndex / FPS;
      const progress = (frameIndex % TOTAL_FRAMES) / TOTAL_FRAMES;
      const loopAngle = progress * Math.PI * 2;
-     // Clean canvas and render visuals deterministically using frameIndex / loopAngle
+     // Synchronize GSAP/Anime timelines if used:
+     // if (masterTl) masterTl.time(t);
+     // Clear canvas and render all layers deterministically from frameIndex / t / loopAngle
    }
    window.__renderTick = function(frameIndex, targetFps) {
      renderFrame(frameIndex);
    };
 
-   Also provide an interactive fallback loop for previewing inside browser:
+   Also provide an interactive fallback loop for standard browser preview:
    let previewFrame = 0;
    function animLoop() {
-     if (!window.__isNaraHeadless) {
+     if (!window.__isNaraHeadless && !window.__IS_HEADLESS_RENDERER__) {
        renderFrame(previewFrame);
        previewFrame = (previewFrame + 1) % TOTAL_FRAMES;
        requestAnimationFrame(animLoop);
      }
    }
-   requestAnimationFrame(animLoop);
 
-4. RESOLUTION & AUTO-FIT VIEWPORT:
-   The native stage resolution is 3840x2160 (or user requested resolution).
-   Include an autoFitStage function so the stage scales down cleanly to fit any preview window:
-   function autoFitStage() {
-     const stage = document.getElementById('stage');
-     if (!stage) return;
-     const scale = Math.min(window.innerWidth / 3840, window.innerHeight / 2160);
-     stage.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
-   }
-   window.addEventListener('resize', autoFitStage);
-   window.addEventListener('DOMContentLoaded', autoFitStage);
-   autoFitStage();
+5. DETERMINISTIC MATH & SEEDED PRNG (ZERO RANDOM STUTTER):
+   - NEVER call unseeded Math.random(), Date.now(), or performance.now() inside renderFrame().
+   - Use a deterministic seeded PRNG (such as mulberry32) for particles, stars, bokeh, grain, and procedural textures.
+   - For loop: true, all motion MUST be periodic over loopAngle = (frameIndex / TOTAL_FRAMES) * Math.PI * 2 so frame (TOTAL_FRAMES - 1) transitions seamlessly into frame 0.
+   - For loop: false (one-shot opener/explainer), animate from frame 0 to (TOTAL_FRAMES - HOLD_FRAMES) and hold the final resolved pose during hold_last_frames.
 
-5. SEAMLESS LOOPING MATH:
-   For looping animations, every visual cycle MUST close smoothly back into frame 0.
-   Use trigonometric circular harmonics (e.g., Math.sin(loopAngle), Math.cos(loopAngle), or modular phases).
-   Never use random Math.random() inside renderFrame() without fixed seeds, because frame N must look identical every time it renders.
+6. 4K STAGE, DESIGN UNITS & AUTO-FIT VIEWPORT:
+   - Native resolution is 3840x2160 (or user-specified width x height) inside #stage-container.
+   - Compute proportional design scale U = WIDTH / 1920 so layout coordinates scale cleanly across 4K, 1080p, vertical 9:16, or 1:1.
+   - Include autoFitStage() using transform: translate(-50%, -50%) scale(...) on resize and DOMContentLoaded.
 
-6. HIGH-END AESTHETIC QUALITY:
-   Create visually breathtaking, sleek, commercial-grade motion graphics:
-   - Vibrant cyber glows, bioluminescent gradients, smooth specular highlights.
-   - Clean geometric telemetry, sci-fi HUDs, luxury gold particle vortexes, or fluid wave physics.
-   - Proper compositing modes (ctx.globalCompositeOperation = 'lighter' or 'screen' where glowing energy is needed).
+======================================================================
+BROADCAST CREATIVE LAWS (ANTI-PPT & ANTI-OVERLAP)
+======================================================================
+
+1. CINEMATIC VIDEO, NOT A SLIDESHOW (ANTI-PPT):
+   - Implement a unified 2.5D/3D camera rig (applyCamera(t): zoom, pan, tilt, push-through) so scenes transition through camera/world motion rather than fading static boxes.
+   - Maximum 2 text hierarchy levels per scene (1 primary headline/metric + 1 concise sub-label).
+
+2. MULTI-LAYER LIVING BACKGROUND (>= 3 LAYERS):
+   - Layer 1: Dynamic gradient mesh or atmospheric base that shifts with t.
+   - Layer 2: Volumetric light blobs, perspective grids, or 3D geometry with depth parallax.
+   - Layer 3: Rising ambient dust particles + seeded film grain overlay + vignette + transitional light leaks.
+   - When backgroundStyle === 'transparent' (ProRes 4444 Alpha), set body/#stage-container background: transparent and use ctx.clearRect(0, 0, WIDTH, HEIGHT).
+
+3. LIVING TYPOGRAPHY & ANTI-OVERLAP GUARANTEE:
+   - Enforce a strict 5% safe-area margin from all canvas edges (192px horizontal, 108px vertical on 4K).
+   - Measure all text with ctx.measureText() (auto-fit font size or word-wrap) so text never clips or collides.
+   - Sequential text transitions must never overlap in the same zone (outEnd <= inStart).
+   - Render text entrance/exit with directional motion blur (ghost trails along velocity vector) and character/word stagger.
 
 OUTPUT FORMAT:
-Return ONLY the raw HTML code. Do NOT wrap with markdown fences (\`\`\`html) or conversational commentary. Start directly with <!--METADATA and end with </html>.`;
+Return ONLY raw, valid HTML code. Do NOT wrap in markdown code fences (\`\`\`html) or include commentary. Start at character 0 with <!--METADATA and end with </html>.`;
   }
 
   /**
-   * User prompt template with specific user options
+   * User prompt template with specific user options, Hybrid CDN preferences, and Folder/Attached Assets
    */
   function buildUserPrompt(options) {
     const theme = options.theme || 'Futuristic Cyberpunk Holographic HUD with pulsing energy grid';
@@ -145,30 +181,39 @@ Return ONLY the raw HTML code. Do NOT wrap with markdown fences (\`\`\`html) or 
     const width = parseInt(options.width, 10) || 3840;
     const height = parseInt(options.height, 10) || 2160;
     const isLoop = options.isLoop !== false;
+    const holdLastFrames = isLoop ? 0 : (parseInt(options.holdLastFrames, 10) || Math.round(fps * 1.0));
     const backgroundStyle = options.backgroundStyle || 'dark'; // 'dark', 'transparent', 'light'
     const assets = Array.isArray(options.assets) ? options.assets : [];
+    const folderAssets = Array.isArray(options.folderAssets) ? options.folderAssets : [];
 
     let assetInstructions = '';
     if (assets.length > 0) {
-      assetInstructions = `\n\nATTACHED USER ASSETS TO ANIMATE & INTEGRATE (${assets.length} file(s)):
+      assetInstructions += `\n\nATTACHED USER ASSETS TO ANIMATE & INTEGRATE (${assets.length} file(s)):
 The user has attached the following visual asset(s). You MUST animate and integrate them prominently into the motion graphic:
 ${assets.map((a, idx) => {
-  const isImg = a.isImage || (a.mimeType && a.mimeType.startsWith('image/'));
-  return `- Asset #${idx + 1}: "${a.name}" (${a.mimeType || 'unknown'})
-    Data URL: "${a.dataUrl ? (a.dataUrl.length > 100 ? a.dataUrl.substring(0, 80) + '...[embedded_data_url]...' : a.dataUrl) : ''}"
-    Integration Instruction: Preload this image asset as a new Image() with src = "${a.dataUrl || ''}". In renderFrame(frameIndex), draw and animate this asset on canvas (e.g., animate position, rotation, scale, pulsing glow, or floating particle trails around it). Make sure to check image.complete before ctx.drawImage.`;
+  return `- Asset #${idx + 1}: "${a.name}" (${a.mimeType || 'image'})
+    Data URL / Source: "${a.dataUrl ? (a.dataUrl.length > 100 ? a.dataUrl.substring(0, 80) + '...[embedded_data_url]...' : a.dataUrl) : (a.relativePath || a.name)}"
+    Integration Instruction: Preload this image asset in a hidden <div id="nara-local-assets" style="display:none"><img id="user-asset-${idx}" src="${a.dataUrl || a.relativePath || a.name}" /></div> or via new Image(). In renderFrame(frameIndex), draw and animate this asset with camera parallax, smooth scale/rotation, and glowing accents. Always check (img.complete && img.naturalWidth > 0) before ctx.drawImage, and provide a procedural fallback if not yet loaded.`;
 }).join('\n')}
-CRITICAL: Embed the exact provided dataUrl string into the JavaScript code as the image src so it renders offline with 100% self-containment!`;
+CRITICAL: Embed the exact provided src/dataUrl string into the code so it renders offline with 100% self-containment!`;
+    }
+
+    if (folderAssets.length > 0) {
+      assetInstructions += `\n\nLOCAL FOLDER ASSETS IN HTML DIRECTORY (${folderAssets.length} file(s)):
+Integrate the following relative paths from the animation folder (with procedural Canvas fallback if missing):
+${folderAssets.map((relPath, idx) => `- Local Asset #${idx + 1}: "${relPath}"`).join('\n')}`;
     }
 
     return `Synthesize a high-fidelity NARA 4K HTML5 motion graphic with the following specifications:
 - Theme / Visual Concept: ${theme}
-- Duration: ${durationSeconds} seconds (${totalFrames} total frames at ${fps} FPS)
-- Canvas Dimensions: ${width}x${height}
-- Looping: ${isLoop ? 'Seamless 360° Loop' : 'One-shot cinematic build and resolve'}
-- Background Style: ${backgroundStyle === 'transparent' ? 'Transparent Alpha (ctx.clearRect, transparent body background for ProRes 4444)' : backgroundStyle === 'light' ? 'Premium Clean Light Studio (#F5F7FA)' : 'Deep Cinematic Dark Cyber (#04060E or #0B0E17)'}${assetInstructions}
+- Duration: ${durationSeconds} seconds (${totalFrames} total frames at ${fps} FPS, hold_last_frames: ${holdLastFrames})
+- Canvas Dimensions: ${width}x${height} (use proportional design unit U = WIDTH / 1920)
+- Looping Mode: ${isLoop ? 'Seamless 360° Periodic Loop (loop: true, hold_last_frames: 0)' : `One-Shot Cinematic Opener/Resolve (loop: false, hold_last_frames: ${holdLastFrames})`}
+- Background Style: ${backgroundStyle === 'transparent' ? 'Transparent Alpha Channel (ctx.clearRect, transparent body/stage background for Apple ProRes 4444)' : backgroundStyle === 'light' ? 'Premium Editorial Light Studio (>= 2 moving background layers + subtle grain)' : 'Deep Cinematic Multi-Layer Dark (>= 3 moving background layers + volumetric glow + seeded grain)'}
+- Hybrid CDN & Local Fallback: Include dual-fallback <script> tags (e.g., GSAP 3 / Three.js / Anime.js with onerror="this.onerror=null;this.src='vendor/...';") and lockstep-sync timelines to t = frameIndex / ${fps} inside renderFrame(frameIndex).
+- Folder Asset Support: Include a hidden #nara-local-assets preload block and safe drawLocalImageOrFallback() helper so local folder assets (e.g., assets/logo.png) and procedural graphics work seamlessly.${assetInstructions}
 
-Ensure the output is 100% standalone, uses window.__renderTick, and contains the embedded <!--METADATA ... METADATA--> block.`;
+Ensure the output is 100% standalone, follows Anti-PPT & Anti-Overlap laws, uses window.__renderTick(frameIndex, targetFps), and starts at line 1 with the <!--METADATA ... METADATA--> block.`;
   }
 
   /**
@@ -604,6 +649,8 @@ METADATA-->\n`;
     saveAiConfig,
     generateAiMotion,
     fetchAvailableModels,
+    buildSystemPrompt,
+    buildUserPrompt,
     INSPIRATION_PROMPTS,
     STORAGE_KEYS,
     DEFAULT_MODELS
