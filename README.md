@@ -345,7 +345,7 @@ NARA kini terintegrasi dengan **AI Motion Synthesizer Engine** mutakhir yang mem
 - **Penyimpanan API Key Aman di LocalStorage**:
   - API Key disimpan secara lokal di perangkat Anda (`localStorage`) dan **tidak pernah dikirim ke server pihak ketiga mana pun**. Aplikasi berkomunikasi langsung dari aplikasi desktop ke endpoint resmi Google / OpenAI.
 - **100% Sesuai Arsitektur Standar NARA**:
-  - **Zero External Dependencies**: Menghasilkan kode HTML5 murni (Canvas 2D / WebGL / SVG) yang 100% mandiri tanpa library luar atau CDN internet, sehingga dapat dirender secara offline dan bebas crash.
+  - **Hybrid CDN & Zero External Dependencies**: Mendukung grafis native murni maupun library kaya (GSAP, Three.js, PixiJS, Anime.js) dengan sistem Request Interception bawaan NARA yang otomatis memuat dari CDN Online saat terkoneksi internet, dan beralih ke vendor lokal saat offline tanpa error.
   - **Deterministic Virtual Clock**: Otomatis menyertakan hook `window.__renderTick(frameIndex, targetFps)` serta perhitungan trigonometri periodik sehingga animasi dapat di-scrub dan di-render frame demi frame tanpa patah (*seamless loop*).
   - **Embedded JSON Metadata**: Dokumen otomatis dilengkapi header komentar `<!--METADATA { ... } METADATA-->` yang berisi judul komersial, deskripsi, keywords microstock, FPS, total frames, dan kategori.
 - **Inspirasi Cepat (Quick Inspiration Chips)**:
@@ -364,7 +364,42 @@ NARA kini terintegrasi dengan **AI Motion Synthesizer Engine** mutakhir yang mem
 
 ---
 
-### 9. NARA Companion - Browser Extension 🌐
+### 9. Arsitektur Hybrid CDN & Intelligent Offline Fallback Engine ⚡🌐
+
+NARA menghadirkan sistem **Hybrid CDN** revolusioner yang memecahkan keterbatasan antara fleksibilitas library modern dan keandalan rendering offline:
+
+- **🟢 Mode Online (Cloud CDN Aktif & Auto-Cached)**:
+  - Saat komputer terkoneksi ke internet, animasi web dapat memanggil link CDN resmi (seperti `cdnjs.cloudflare.com`, `cdn.jsdelivr.net`, `unpkg.com`, atau `fonts.googleapis.com`).
+  - Seluruh pustaka eksternal yang diunduh secara otomatis dicache ke disk lokal (`generated_animations/.cdn_cache/`) untuk mempersiapkan rendering offline di masa mendatang.
+- **🟡 Mode Offline (Local Vendor Fallback Otomatis)**:
+  - Saat tidak ada koneksi internet (atau rendering pada workstation *air-gapped*), Puppeteer Render Engine NARA secara cerdas **mencegat (*intercept*)** permintaan CDN tersebut pada level jaringan.
+  - NARA langsung menyajikan file vendor lokal (`src/assets/vendor/`) dengan **latensi 0 ms**:
+    - **GSAP 3.12.5** (GreenSock Motion Library)
+    - **Three.js r128** (WebGL 3D Engine)
+    - **PixiJS 7.4.2** (High-Performance 2D WebGL)
+    - **Anime.js 3.2.1** (Lightweight Animation Engine)
+    - **Canvas-Confetti 1.9.3** (Procedural Particle Celebration)
+  - Proses render 4K dijamin tidak akan pernah mengalami *timeout*, *network freeze*, atau layar kosong (*blank screen*) akibat putus koneksi internet!
+- **Pola Fallback Ganda untuk File Mandiri (*Self-Contained*)**:
+  Bagi kreator yang menjual file animasi HTML langsung ke pembeli microstock agar bisa dibuka langsung di browser tanpa NARA:
+  ```html
+  <!-- Coba CDN Online terlebih dahulu; jika offline, otomatis alihkan ke vendor lokal -->
+  <script 
+    src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" 
+    onerror="this.onerror=null; this.src='vendor/gsap.min.js';">
+  </script>
+  ```
+  atau menggunakan penjaga objek `window`:
+  ```html
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.gsap || document.write('<script src="vendor/gsap.min.js"><\/script>');
+  </script>
+  ```
+
+---
+
+### 10. NARA Companion - Browser Extension 🌐
 
 - **View hasil code seketika**: Tak perlu bolak-balik buka file atau menunggu render desktop. Langsung preview kode animasi dan download dari browser Anda (Google Chrome / Microsoft Edge / Brave).
 - **Fitur Utama Extension**:
@@ -462,7 +497,7 @@ motionjs/
 2. **Bagaimana cara menghasilkan video transparan?**
    - Pastikan preset dipilih **MOV ProRes 4444 (Alpha Transparan)** dan animasi tidak memiliki elemen `body` yang diwarnai solid.
 3. **Apakah NARA memerlukan koneksi internet saat rendering?**
-   - Tidak. NARA beroperasi 100% offline secara lokal. Seluruh generator menggunakan grafis vektor bawaan browser (Canvas 2D / SVG) tanpa dependensi CDN luar.
+   - **Tidak sama sekali.** NARA beroperasi dengan arsitektur cerdas **Hybrid CDN & Offline Fallback**. Jika komputer sedang terhubung internet, NARA akan memuat link CDN online terbaru dan otomatis menyimpannya ke cache lokal. Namun jika koneksi internet terputus atau rendering dijalankan secara *air-gapped* offline, NARA secara otomatis mencegat pemanggilan CDN dan menyajikan pustaka vendor internal (GSAP, Three.js, PixiJS, Anime.js, Confetti) dengan latensi 0 ms tanpa error/timeout.
 
 ---
 

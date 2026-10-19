@@ -7,6 +7,10 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const crypto = require('crypto');
+const dns = require('dns');
+const https = require('https');
+const http = require('http');
 const puppeteer = require('puppeteer');
 
 function safeExistsSync(targetPath) {
@@ -244,6 +248,199 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}, audioPath = null,
   ];
 }
 
+// ============================================================================
+// Hybrid CDN & Intelligent Offline Fallback Engine
+// ============================================================================
+const VENDOR_DIR = path.resolve(__dirname, '../../assets/vendor');
+const CDN_CACHE_DIR = path.resolve(__dirname, '../../../generated_animations/.cdn_cache');
+
+// Ensure persistent CDN cache directory exists
+if (!safeExistsSync(CDN_CACHE_DIR)) {
+  try { fs.mkdirSync(CDN_CACHE_DIR, { recursive: true }); } catch (e) {}
+}
+
+let cachedOnlineStatus = null;
+let lastOnlineCheckTime = 0;
+
+/**
+ * Check if machine is connected to internet (cached for 5 seconds to prevent latency)
+ */
+function isInternetConnected(timeoutMs = 1200) {
+  const now = Date.now();
+  if (cachedOnlineStatus !== null && (now - lastOnlineCheckTime < 5000)) {
+    return Promise.resolve(cachedOnlineStatus);
+  }
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      cachedOnlineStatus = false;
+      lastOnlineCheckTime = Date.now();
+      resolve(false);
+    }, timeoutMs);
+
+    dns.lookup('cloudflare.com', (err) => {
+      clearTimeout(timer);
+      cachedOnlineStatus = !err;
+      lastOnlineCheckTime = Date.now();
+      resolve(!err);
+    });
+  });
+}
+
+/**
+ * Identify if target URL or filename corresponds to bundled vendor libraries
+ */
+function matchVendorLibrary(targetUrl) {
+  const normalized = targetUrl.toLowerCase();
+
+  // GSAP 3.x
+  if (normalized.includes('gsap') || normalized.includes('tweenmax') || normalized.includes('tweenlite')) {
+    const file = path.join(VENDOR_DIR, 'gsap.min.js');
+    if (safeExistsSync(file)) return { name: 'GSAP', path: file, mime: 'application/javascript' };
+  }
+  // Three.js
+  if (normalized.includes('three.') || normalized.includes('three.min') || normalized.includes('/three@') || normalized.includes('/three/')) {
+    const file = path.join(VENDOR_DIR, 'three.min.js');
+    if (safeExistsSync(file)) return { name: 'Three.js', path: file, mime: 'application/javascript' };
+  }
+  // PixiJS
+  if (normalized.includes('pixi.') || normalized.includes('pixi.min') || normalized.includes('/pixi@') || normalized.includes('/pixi.js/')) {
+    const file = path.join(VENDOR_DIR, 'pixi.min.js');
+    if (safeExistsSync(file)) return { name: 'PixiJS', path: file, mime: 'application/javascript' };
+  }
+  // Anime.js
+  if (normalized.includes('anime.') || normalized.includes('anime.min') || normalized.includes('/animejs/')) {
+    const file = path.join(VENDOR_DIR, 'anime.min.js');
+    if (safeExistsSync(file)) return { name: 'Anime.js', path: file, mime: 'application/javascript' };
+  }
+  // Canvas Confetti
+  if (normalized.includes('canvas-confetti') || normalized.includes('confetti.browser') || normalized.includes('confetti.min')) {
+    const file = path.join(VENDOR_DIR, 'canvas-confetti.min.js');
+    if (safeExistsSync(file)) return { name: 'Canvas-Confetti', path: file, mime: 'application/javascript' };
+  }
+
+  return null;
+}
+
+/**
+ * Hash URL for local caching
+ */
+function getCacheFilePath(targetUrl) {
+  try {
+    const hash = crypto.createHash('md5').update(targetUrl).digest('hex');
+    const ext = path.extname(new URL(targetUrl).pathname) || '.js';
+    return path.join(CDN_CACHE_DIR, `${hash}${ext}`);
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Asynchronously cache an online resource to disk
+ */
+function cacheResourceAsync(targetUrl, cachePath) {
+  if (!cachePath || safeExistsSync(cachePath)) return;
+  try {
+    const client = targetUrl.startsWith('https') ? https : http;
+    client.get(targetUrl, (res) => {
+      if (res.statusCode === 200) {
+        const fileStream = fs.createWriteStream(cachePath);
+        res.pipe(fileStream);
+        fileStream.on('error', () => {});
+      }
+    }).on('error', () => {});
+  } catch (e) {}
+}
+
+/**
+ * Setup Puppeteer request interception for Hybrid Online CDN with Local Fallback
+ */
+async function setupHybridCdnInterception(page, htmlPath, onLog = () => {}) {
+  await page.setRequestInterception(true);
+  const isOnline = await isInternetConnected();
+
+  onLog(`[Engine CDN] Jaringan terdeteksi: ${isOnline ? 'ONLINE (CDN Cloud Aktif & Auto-Cached)' : 'OFFLINE (Local Vendor Fallback Aktif)'}`);
+
+  page.on('request', async (req) => {
+    try {
+      const reqUrl = req.url();
+      const isHttp = reqUrl.startsWith('http://') || reqUrl.startsWith('https://');
+
+      // 1. Tangani request file:// lokal yang meminta folder vendor tapi filenya tidak ada di folder HTML
+      if (reqUrl.startsWith('file://')) {
+        let decodedPath = '';
+        try {
+          decodedPath = url.fileURLToPath(reqUrl);
+        } catch (_) {
+          decodedPath = reqUrl.replace(/^file:\/\/\/?/, '');
+        }
+
+        if (!safeExistsSync(decodedPath) && (decodedPath.includes('vendor') || decodedPath.includes('node_modules'))) {
+          const matched = matchVendorLibrary(decodedPath);
+          if (matched && safeExistsSync(matched.path)) {
+            onLog(`[Engine CDN] Menyajikan vendor lokal untuk file path: ${path.basename(decodedPath)}`);
+            return req.respond({
+              status: 200,
+              contentType: matched.mime,
+              body: fs.readFileSync(matched.path)
+            });
+          }
+        }
+        return req.continue();
+      }
+
+      // 2. Tangani request online HTTP / HTTPS
+      if (isHttp) {
+        const cachePath = getCacheFilePath(reqUrl);
+        const matchedVendor = matchVendorLibrary(reqUrl);
+
+        if (isOnline) {
+          // ONLINE: Biarkan Chromium memuat langsung dari CDN Online
+          // Sekaligus buat salinan cache ke disk secara asinkron untuk persiapan rendering offline
+          if (cachePath) {
+            cacheResourceAsync(reqUrl, cachePath);
+          }
+          return req.continue();
+        } else {
+          // OFFLINE: Jalankan Fallback Offline Otomatis!
+          // a. Cek apakah ada di folder vendor bawaan (GSAP, Three, Pixi, Anime, Confetti)
+          if (matchedVendor && safeExistsSync(matchedVendor.path)) {
+            onLog(`[Engine CDN] Offline Fallback: Menyajikan ${matchedVendor.name} dari vendor internal`);
+            return req.respond({
+              status: 200,
+              contentType: matchedVendor.mime,
+              body: fs.readFileSync(matchedVendor.path)
+            });
+          }
+
+          // b. Cek apakah ada di cache lokal dari sesi online sebelumnya
+          if (cachePath && safeExistsSync(cachePath)) {
+            onLog(`[Engine CDN] Offline Fallback: Menyajikan dari cache lokal: ${path.basename(reqUrl)}`);
+            const ext = path.extname(cachePath).toLowerCase();
+            const contentType = ext === '.css' ? 'text/css' : (ext === '.woff2' ? 'font/woff2' : 'application/javascript');
+            return req.respond({
+              status: 200,
+              contentType,
+              body: fs.readFileSync(cachePath)
+            });
+          }
+
+          // c. Jika resource online tidak tersedia saat offline, respon stub aman agar page.goto tidak hang/timeout
+          onLog(`[Engine CDN] Peringatan: Offline dan ${reqUrl} belum tercache. Merespons stub aman.`);
+          return req.respond({
+            status: 200,
+            contentType: 'application/javascript',
+            body: Buffer.from(`/* [NARA] Offline Fallback Stub for ${reqUrl} */`)
+          });
+        }
+      }
+
+      return req.continue();
+    } catch (err) {
+      try { req.continue(); } catch (_) {}
+    }
+  });
+}
+
 class RenderEngine {
   constructor() {
     this.browser = null;
@@ -423,6 +620,9 @@ class RenderEngine {
       // Allow inspectable flags
       window.__IS_HEADLESS_RENDERER__ = true;
     });
+
+    // 4.5. Initialize Hybrid CDN & Intelligent Offline Fallback Interceptor
+    await setupHybridCdnInterception(page, htmlPath, onLog);
 
     // 5. Navigate to local HTML file with standard RFC 8089 file URL
     const fileUrl = path.isAbsolute(htmlPath) ? url.pathToFileURL(htmlPath).href : htmlPath;

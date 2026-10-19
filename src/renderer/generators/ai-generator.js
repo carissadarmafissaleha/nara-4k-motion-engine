@@ -57,10 +57,13 @@
 Your sole mission is to generate a single, completely standalone, self-contained HTML5 file featuring cutting-edge, high-end commercial motion graphics (Canvas 2D, WebGL, or procedural SVG/CSS).
 
 CRITICAL TECHNICAL SPECIFICATIONS THAT MUST BE SATISFIED:
-1. ABSOLUTELY ZERO EXTERNAL DEPENDENCIES:
-   - NEVER use <script src="..."> or CDN links (no Three.js, GSAP, anime.js, or external fonts).
-   - All code MUST run 100% offline in a Chromium headless browser.
-   - Use native HTML5 Canvas 2D, WebGL, SVG, or pure CSS3 transitions.
+1. HYBRID CDN ARCHITECTURE & STANDALONE EXECUTION:
+   - Native HTML5 Canvas 2D, WebGL, procedural SVG, or CSS3 keyframes are first-class citizens.
+   - When advanced animation or 3D graphics libraries are required (GSAP, Three.js, PixiJS, Anime.js), you MAY include standard CDN script tags (e.g. cdnjs.cloudflare.com or cdn.jsdelivr.net).
+   - NARA's Core Render Engine automatically intercepts these CDN requests and serves pre-bundled local vendor copies (GSAP, Three.js, PixiJS, Anime.js, Confetti) when offline, ensuring 100% deterministic offline rendering.
+   - For standalone dual-fallback, you can use:
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" onerror="this.onerror=null; this.src='vendor/gsap.min.js';"></script>
+   - All code MUST run 100% deterministically in a Chromium headless browser whether online or offline.
 
 2. NARA DETERMINISTIC METADATA HEADER:
    The document MUST start at line 1 with a NARA metadata comment block:

@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       appSubtitle: "Commercial 4K & ProRes 4444 Motion Studio",
       badgeStreamActive: "Headless Stream Aktif",
       badgeProresReady: "4444",
+      badgeCdnOnline: "CDN: Online",
+      badgeCdnOffline: "CDN: Offline (Lokal)",
       btnOpenFolder: "Buka Folder Hasil",
       previewHeader: "Live Preview",
       alphaModeLabel: "Alpha:",
@@ -176,6 +178,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       appSubtitle: "Commercial 4K & ProRes 4444 Motion Studio",
       badgeStreamActive: "Headless Stream Active",
       badgeProresReady: "4444",
+      badgeCdnOnline: "CDN: Online",
+      badgeCdnOffline: "CDN: Offline (Local)",
       btnOpenFolder: "Open Output Folder",
       previewHeader: "Live Preview",
       alphaModeLabel: "Alpha:",
@@ -1106,6 +1110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateQueueDisplay();
     updatePlaybackDisplay();
+    updateCdnStatus();
 
     // Re-translate all terminal log lines (initial and dynamic logs)
     const terminalLogsEl = document.getElementById('terminalLogs');
@@ -4085,4 +4090,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnClearQueue.disabled = false;
     updateQueueDisplay();
   }
+
+  // ==========================================================================
+  // Hybrid CDN Status Monitor (Online Cloud / Offline Local Fallback)
+  // ==========================================================================
+  function updateCdnStatus() {
+    const badgeCdnStatus = document.getElementById('badgeCdnStatus');
+    const badgeCdnText = document.getElementById('badgeCdnText');
+    if (!badgeCdnStatus || !badgeCdnText) return;
+
+    const isOnline = navigator.onLine;
+    const dict = Object.assign({}, translations.en, translations[currentLang] || translations.id);
+
+    if (isOnline) {
+      badgeCdnStatus.className = 'engine-badge cdn-badge online';
+      badgeCdnStatus.title = 'Status Jaringan: ONLINE (CDN Cloud Aktif & Auto-Cached)';
+      badgeCdnText.textContent = dict.badgeCdnOnline || 'CDN: Online';
+    } else {
+      badgeCdnStatus.className = 'engine-badge cdn-badge offline';
+      badgeCdnStatus.title = 'Status Jaringan: OFFLINE (Local Vendor Fallback Aktif)';
+      badgeCdnText.textContent = dict.badgeCdnOffline || 'CDN: Offline (Lokal)';
+    }
+  }
+
+  window.addEventListener('online', updateCdnStatus);
+  window.addEventListener('offline', updateCdnStatus);
+  updateCdnStatus();
 });

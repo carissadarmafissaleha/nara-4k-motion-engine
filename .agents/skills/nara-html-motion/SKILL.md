@@ -49,12 +49,22 @@ Setelah jawaban diterima, tulis **style brief** singkat (lihat Bagian 6, Hukum B
 
 ## 1. Aturan Wajib (Golden Rules)
 
-1. **Zero Online CDN (100% Offline Standalone & Local Folder Assets)**:
-   - DILARANG menggunakan CDN online yang memerlukan koneksi internet (tanpa CDN luar seperti cdnjs, unpkg, jsdelivr, atau Google Fonts CDN).
-   - Animasi dapat berupa **satu file `.html` mandiri** ATAU memanggil aset lokal di dalam folder HTML (seperti gambar `.png`/`.jpg`/`.svg`/`.webp`, skrip modul `.js`, dan stylesheet `.css`).
-   - Mesin render NARA secara otomatis memetakan base URL folder lokal, memuat seluruh gambar/script/CSS, dan menunggu decoding aset selesai sebelum frame direkam.
-   - Gunakan **Native Canvas 2D API**, **WebGL**, **SVG prosedural**, atau **CSS3 Keyframes/Transitions**.
-   - Gunakan font sistem bawaan (`system-ui`, `-apple-system`, `sans-serif`, `monospace`, `'Trebuchet MS'`, `'Plus Jakarta Sans'`) atau font lokal yang dipanggil lewat `@font-face`.
+1. **Hybrid Online CDN & Offline Local Fallback Architecture**:
+   - **Mode Online**: Saat perangkat terhubung ke internet, animasi bebas menggunakan CDN online resmi (seperti `cdnjs`, `jsdelivr`, `unpkg`, atau Google Fonts). NARA secara otomatis mem-cache aset yang diunduh ke disk lokal untuk persiapan rendering offline selanjutnya.
+   - **Mode Offline**: Saat koneksi internet terputus atau rendering dijalankan di lingkungan tertutup (*air-gapped*), Render Engine NARA secara cerdas mencegat (*intercept*) pemanggilan CDN dan menyajikan pustaka vendor internal (`src/assets/vendor/`: GSAP 3.x, Three.js, PixiJS, Anime.js, Canvas-Confetti) dengan latensi 0 ms tanpa error/timeout.
+   - **Pola Fallback Ganda untuk Deliverable Mandiri**:
+     Untuk file animasi yang dapat diklik dua kali (`double-click`) langsung di browser konsumen tanpa NARA, gunakan pola fallback aman:
+     ```html
+     <!-- Coba CDN Online; jika offline / gagal, otomatis alihkan ke vendor lokal -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" onerror="this.onerror=null; this.src='vendor/gsap.min.js';"></script>
+     ```
+     atau pengaman objek window:
+     ```html
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+     <script>window.gsap || document.write('<script src="vendor/gsap.min.js"><\/script>');</script>
+     ```
+   - Animasi juga dapat ditulis 100% mandiri menggunakan **Native Canvas 2D API**, **WebGL**, **SVG prosedural**, atau **CSS3 Keyframes/Transitions** tanpa dependensi luar apa pun.
+   - Font: Boleh memanggil Google Fonts saat online, didampingi font sistem fallback (`system-ui`, `-apple-system`, `sans-serif`, `'Plus Jakarta Sans'`), atau font lokal yang dipanggil lewat `@font-face` di folder aset animasi.
 
 2. **Wajib Memiliki Header Metadata JSON (Line 1)**:
    - Harus dimulai tepat di baris pertama file dengan blok komentar:
@@ -4059,10 +4069,9 @@ DISERAHKAN adalah satu `index.html` yang bisa diklik dua kali:
   Chrome menolak `<script type="module" src="js/app.js">` dari `file://`
   (origin `null` → CORS), sedangkan module inline boleh meng-`import` dari
   CDN https tanpa masalah.
-- Import map + GSAP/Three dari CDN tetap dipakai (butuh internet, tidak butuh
-  server). Font Google juga.
-- Aset lokal (ikon, gambar) cukup path relatif — `<img src="icon.png">`
-  aman di `file://`.
+- Import map + GSAP/Three/Pixi/Anime dari CDN tetap dapat dipakai. Sistem Hybrid CDN NARA otomatis memuat dari CDN Online saat ada internet, dan beralih ke vendor lokal internal saat offline tanpa menghentikan rendering atau memunculkan error CORS.
+- Untuk deliverable konsumen, sertakan fallback offline: `<script src="https://..." onerror="this.onerror=null; this.src='vendor/...';"></script>` agar file tetap bisa dibuka di komputer mana pun tanpa koneksi internet.
+- Aset lokal (ikon, gambar) cukup path relatif — `<img src="icon.png">` aman di `file://`.
 - Hindari `fetch()`/XHR ke berkas lokal — itu diblokir di `file://`.
 - Node/puppeteer hanya untuk render MP4; jangan sampai user mengira opener
   butuh `node_modules`. Jelaskan itu di README. Tanpa Node: rekam layar

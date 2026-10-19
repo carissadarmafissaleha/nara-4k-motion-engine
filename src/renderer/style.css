@@ -444,6 +444,24 @@ body {
   background-color: var(--text-muted);
 }
 
+.cdn-badge.online::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+}
+
+.cdn-badge.offline::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #eab308;
+  box-shadow: 0 0 6px rgba(234, 179, 8, 0.4);
+}
+
 /* Header Render Button (Signature shadcn Solid Monochrome in Header) */
 .header-render-btn {
   display: inline-flex;
