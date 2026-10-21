@@ -639,11 +639,13 @@ ipcMain.handle('engine:startBatchRender', async (event, payload) => {
           metadata: mergedMeta,
           audioPath: matchedAudioPath,
           copyAudioToOutput: Boolean(settings.copyAudioToOutput),
-          fastMode: Boolean(settings.fastMode)
+          fastMode: Boolean(settings.fastMode),
+          encoderEngine: settings.encoderEngine || 'auto'
         },
         (progress) => {
           if (tray && progress && typeof progress.percent === 'number') {
-            tray.setToolTip(`NARA [${progress.percent}%] (${idx + 1}/${items.length}): ${baseName.slice(0, 30)}`);
+            const etaStr = progress.etaFormatted ? ` [ETA: ${progress.etaFormatted}]` : '';
+            tray.setToolTip(`NARA [${progress.percent}%]${etaStr} (${idx + 1}/${items.length}): ${baseName.slice(0, 25)}`);
           }
           if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('render:progress', {

@@ -624,6 +624,46 @@ body {
   gap: 8px;
 }
 
+/* Header Engine Acceleration Selector (GPU vs CPU) */
+.engine-mode-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 2px 7px;
+  height: 32px;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.engine-mode-select-wrap:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
+}
+
+.header-engine-select {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+.header-engine-select option {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+
 /* shadcn Toggle Group for Alpha Inspection */
 .alpha-toggle-group {
   display: inline-flex;

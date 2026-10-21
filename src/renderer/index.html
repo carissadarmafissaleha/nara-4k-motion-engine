@@ -92,7 +92,6 @@
         </button>
 
         <span class="engine-badge live-badge" data-i18n="badgeStreamActive">Headless Stream Active</span>
-        <span class="engine-badge prores-badge" data-i18n="badgeProresReady">4444</span>
         <span id="badgeCdnStatus" class="engine-badge cdn-badge online" title="Status Jaringan CDN NARA (Online CDN / Offline Fallback)">
           <span id="badgeCdnText" data-i18n="badgeCdnOnline">CDN: Online</span>
         </span>
@@ -315,6 +314,25 @@
           </div>
           <div class="panel-header-actions queue-header-actions">
             <div class="queue-counter" id="queueSummaryBadge">0 File</div>
+            <div class="engine-mode-select-wrap" title="Pilih Mode Akselerasi Render (GPU vs CPU)">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                <rect x="9" y="9" width="6" height="6"></rect>
+                <line x1="9" y1="1" x2="9" y2="4"></line>
+                <line x1="15" y1="1" x2="15" y2="4"></line>
+                <line x1="9" y1="20" x2="9" y2="23"></line>
+                <line x1="15" y1="20" x2="15" y2="23"></line>
+                <line x1="20" y1="9" x2="23" y2="9"></line>
+                <line x1="20" y1="14" x2="23" y2="14"></line>
+                <line x1="1" y1="9" x2="4" y2="9"></line>
+                <line x1="1" y1="14" x2="4" y2="14"></line>
+              </svg>
+              <select id="selectEncoderEngine" class="header-engine-select" title="Pilih Akselerasi Render">
+                <option value="auto" selected>⚡ Auto (GPU)</option>
+                <option value="gpu">🚀 GPU (AMD/NV)</option>
+                <option value="cpu">💻 CPU (Normal)</option>
+              </select>
+            </div>
             <button id="btnStartRender" class="btn-start header-render-btn" disabled title="Start Batch Render">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>

@@ -3,7 +3,7 @@
  * Zero-Temp-File Frame Streaming from Headless Chrome to FFmpeg
  */
 
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
@@ -82,13 +82,49 @@ function resolveBrowserExecutable() {
   return undefined;
 }
 
+let cachedHardwareEncoder = undefined;
+
 /**
- * FFmpeg Preset Arguments Generator
+ * Detect available hardware video encoders (AMD AMF, NVIDIA NVENC, Intel QSV)
+ * Tests dynamically with a lightweight probe using FFmpeg
+ */
+function detectHardwareEncoder(ffmpegPath = resolveFfmpegPath()) {
+  if (cachedHardwareEncoder !== undefined) {
+    return cachedHardwareEncoder;
+  }
+
+  const candidates = [
+    { type: 'amf', encoder: 'h264_amf', name: 'AMD AMF (Radeon GPU)' },
+    { type: 'nvenc', encoder: 'h264_nvenc', name: 'NVIDIA NVENC (GeForce/RTX)' },
+    { type: 'qsv', encoder: 'h264_qsv', name: 'Intel Quick Sync (QSV)' }
+  ];
+
+  for (const cand of candidates) {
+    try {
+      const probe = spawnSync(
+        ffmpegPath,
+        ['-f', 'lavfi', '-i', 'color=c=black:s=128x128:d=0.04', '-c:v', cand.encoder, '-f', 'null', '-'],
+        { windowsHide: true, timeout: 3000 }
+      );
+      if (probe && probe.status === 0) {
+        cachedHardwareEncoder = cand;
+        return cachedHardwareEncoder;
+      }
+    } catch (e) {
+      // ignore probe error and try next candidate
+    }
+  }
+
+  cachedHardwareEncoder = null;
+  return null;
+}
+
+/**
+ * FFmpeg Preset Arguments Generator with GPU Acceleration & CPU Fallback
  */
 function getFfmpegArgs(preset, fps, outputPath, metadata = {}, audioPath = null, audioOptions = {}) {
-  // Fast mode (non-alpha only): frames arrive as JPEG, which is far cheaper to encode than PNG
   const isProResPreset = (preset === 'prores4444' || preset === 'prores' || preset === 'mov');
-  const useJpegInput = Boolean(audioOptions.fastMode) && !isProResPreset;
+  const useJpegInput = Boolean(audioOptions.useJpegInput || audioOptions.fastMode) && !isProResPreset;
   const commonInput = [
     '-y',
     '-f', 'image2pipe',
@@ -100,17 +136,18 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}, audioPath = null,
   const hasAudio = Boolean(audioPath && safeExistsSync(audioPath));
 
   if (hasAudio) {
-    // If seamless loop is active, loop the audio input stream to match full animation length
     if (audioOptions.isSeamlessLoop) {
       commonInput.push('-stream_loop', '-1');
     }
     commonInput.push('-i', audioPath);
   }
 
-  commonInput.push('-sws_flags', 'spline+accurate_rnd+full_chroma_int+full_chroma_inp');
+  // Optimized chroma scaler: bicubic + full chroma (much faster than spline, visually crisp)
+  commonInput.push('-sws_flags', audioOptions.fastMode ? 'fast_bilinear' : 'bicubic+full_chroma_int');
 
   let videoArgs = [];
   let audioArgs = [];
+  const hw = audioOptions.hwEncoder;
 
   switch (preset) {
     case 'prores4444':
@@ -122,13 +159,13 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}, audioPath = null,
         '-profile:v', '4',
         '-qscale:v', '4',
         '-vendor', 'apl0',
+        '-threads', '0',
         '-pix_fmt', 'yuva444p10le',
         '-color_primaries', 'bt709',
         '-color_trc', 'bt709',
         '-colorspace', 'bt709'
       ];
       if (hasAudio) {
-        // Broadcast standard uncompressed PCM 24-bit 48kHz stereo
         audioArgs = [
           '-c:a', 'pcm_s24le',
           '-ar', '48000',
@@ -138,19 +175,65 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}, audioPath = null,
       break;
 
     case 'mp4_4k':
-      // MP4 High Bitrate 4K with AQ Mode 3 Anti-Banding & BT.709 mastering
-      videoArgs = [
-        '-c:v', 'libx264',
-        '-preset', audioOptions.fastMode ? 'veryfast' : 'slow',
-        '-crf', audioOptions.fastMode ? '16' : '12',
-        '-x264-params', audioOptions.fastMode ? 'aq-mode=3' : 'aq-mode=3:aq-strength=1.1:deblock=-1,-1',
-        '-pix_fmt', 'yuv420p',
-        '-color_primaries', 'bt709',
-        '-color_trc', 'bt709',
-        '-colorspace', 'bt709',
-        '-color_range', 'tv',
-        '-movflags', '+faststart'
-      ];
+      if (hw && hw.type === 'amf') {
+        // AMD AMF Hardware Encoding
+        videoArgs = [
+          '-c:v', 'h264_amf',
+          '-quality', audioOptions.fastMode ? 'speed' : 'balanced',
+          '-rc', 'cqp',
+          '-qp_i', audioOptions.fastMode ? '18' : '15',
+          '-qp_p', audioOptions.fastMode ? '20' : '17',
+          '-usage', 'transcoding',
+          '-pix_fmt', 'yuv420p',
+          '-color_primaries', 'bt709',
+          '-color_trc', 'bt709',
+          '-colorspace', 'bt709',
+          '-color_range', 'tv',
+          '-movflags', '+faststart'
+        ];
+      } else if (hw && hw.type === 'nvenc') {
+        // NVIDIA NVENC Hardware Encoding
+        videoArgs = [
+          '-c:v', 'h264_nvenc',
+          '-preset', audioOptions.fastMode ? 'p2' : 'p4',
+          '-rc', 'constqp',
+          '-qp', audioOptions.fastMode ? '18' : '14',
+          '-pix_fmt', 'yuv420p',
+          '-color_primaries', 'bt709',
+          '-color_trc', 'bt709',
+          '-colorspace', 'bt709',
+          '-color_range', 'tv',
+          '-movflags', '+faststart'
+        ];
+      } else if (hw && hw.type === 'qsv') {
+        // Intel Quick Sync Video Encoding
+        videoArgs = [
+          '-c:v', 'h264_qsv',
+          '-preset', audioOptions.fastMode ? 'veryfast' : 'medium',
+          '-global_quality', audioOptions.fastMode ? '19' : '15',
+          '-pix_fmt', 'nv12',
+          '-color_primaries', 'bt709',
+          '-color_trc', 'bt709',
+          '-colorspace', 'bt709',
+          '-color_range', 'tv',
+          '-movflags', '+faststart'
+        ];
+      } else {
+        // CPU Fallback (libx264 with Multithreading)
+        videoArgs = [
+          '-c:v', 'libx264',
+          '-preset', audioOptions.fastMode ? 'veryfast' : 'fast',
+          '-crf', audioOptions.fastMode ? '16' : '14',
+          '-x264-params', audioOptions.fastMode ? 'aq-mode=3' : 'aq-mode=3:aq-strength=1.0',
+          '-threads', '0',
+          '-pix_fmt', 'yuv420p',
+          '-color_primaries', 'bt709',
+          '-color_trc', 'bt709',
+          '-colorspace', 'bt709',
+          '-color_range', 'tv',
+          '-movflags', '+faststart'
+        ];
+      }
       if (hasAudio) {
         audioArgs = [
           '-c:a', 'aac',
@@ -163,19 +246,61 @@ function getFfmpegArgs(preset, fps, outputPath, metadata = {}, audioPath = null,
 
     case 'mp4_sosmed':
     default:
-      // MP4 Sosmed 1080p with Anti-Banding
-      videoArgs = [
-        '-c:v', 'libx264',
-        '-preset', audioOptions.fastMode ? 'ultrafast' : 'medium',
-        '-crf', '18',
-        '-x264-params', 'aq-mode=3:aq-strength=0.9',
-        '-pix_fmt', 'yuv420p',
-        '-color_primaries', 'bt709',
-        '-color_trc', 'bt709',
-        '-colorspace', 'bt709',
-        '-color_range', 'tv',
-        '-movflags', '+faststart'
-      ];
+      if (hw && hw.type === 'amf') {
+        videoArgs = [
+          '-c:v', 'h264_amf',
+          '-quality', audioOptions.fastMode ? 'speed' : 'balanced',
+          '-rc', 'cqp',
+          '-qp_i', audioOptions.fastMode ? '22' : '18',
+          '-qp_p', audioOptions.fastMode ? '24' : '20',
+          '-usage', 'transcoding',
+          '-pix_fmt', 'yuv420p',
+          '-color_primaries', 'bt709',
+          '-color_trc', 'bt709',
+          '-colorspace', 'bt709',
+          '-color_range', 'tv',
+          '-movflags', '+faststart'
+        ];
+      } else if (hw && hw.type === 'nvenc') {
+        videoArgs = [
+          '-c:v', 'h264_nvenc',
+          '-preset', audioOptions.fastMode ? 'p2' : 'p4',
+          '-rc', 'constqp',
+          '-qp', audioOptions.fastMode ? '20' : '17',
+          '-pix_fmt', 'yuv420p',
+          '-color_primaries', 'bt709',
+          '-color_trc', 'bt709',
+          '-colorspace', 'bt709',
+          '-color_range', 'tv',
+          '-movflags', '+faststart'
+        ];
+      } else if (hw && hw.type === 'qsv') {
+        videoArgs = [
+          '-c:v', 'h264_qsv',
+          '-preset', audioOptions.fastMode ? 'veryfast' : 'medium',
+          '-global_quality', audioOptions.fastMode ? '22' : '18',
+          '-pix_fmt', 'nv12',
+          '-color_primaries', 'bt709',
+          '-color_trc', 'bt709',
+          '-colorspace', 'bt709',
+          '-color_range', 'tv',
+          '-movflags', '+faststart'
+        ];
+      } else {
+        videoArgs = [
+          '-c:v', 'libx264',
+          '-preset', audioOptions.fastMode ? 'ultrafast' : 'fast',
+          '-crf', '18',
+          '-x264-params', 'aq-mode=3:aq-strength=0.9',
+          '-threads', '0',
+          '-pix_fmt', 'yuv420p',
+          '-color_primaries', 'bt709',
+          '-color_trc', 'bt709',
+          '-colorspace', 'bt709',
+          '-color_range', 'tv',
+          '-movflags', '+faststart'
+        ];
+      }
       if (hasAudio) {
         audioArgs = [
           '-c:a', 'aac',
@@ -536,13 +661,32 @@ class RenderEngine {
       bgMode = 'checkerboard',
       audioPath = null,
       copyAudioToOutput = false,
-      fastMode = false
+      fastMode = false,
+      encoderEngine = 'auto'
     } = config;
 
     const ffmpegPath = resolveFfmpegPath();
     onLog(`[Engine] Initializing render for: ${path.basename(htmlPath)}`);
     onLog(`[Engine] Target resolution: ${width}x${height} @ ${fps}fps`);
     onLog(`[Engine] Preset: ${preset} | Loop: ${isSeamlessLoop} | Hold: ${holdLastFrames} | BG: ${bgMode}`);
+
+    // Detect / Apply Hardware Encoder
+    let chosenHw = null;
+    if (encoderEngine === 'cpu') {
+      onLog('[Engine] Mode Render: CPU Software (libx264) dipilih.');
+    } else {
+      const detected = detectHardwareEncoder(ffmpegPath);
+      if (detected) {
+        chosenHw = detected;
+        onLog(`[Engine] Akselerasi Hardware GPU Aktif: ${detected.name} (${detected.encoder})`);
+      } else {
+        if (encoderEngine === 'gpu') {
+          onLog('[Engine] Peringatan: GPU encoder tidak terdeteksi, fallback otomatis ke CPU.');
+        } else {
+          onLog('[Engine] GPU hardware encoder tidak ditemukan, menggunakan CPU fallback.');
+        }
+      }
+    }
     if (audioPath && safeExistsSync(audioPath)) {
       onLog(`[Engine] Audio se-nama terdeteksi: ${path.basename(audioPath)} (Muxing ke video output)`);
     }
@@ -761,14 +905,23 @@ class RenderEngine {
 
     // 6. Spawn FFmpeg Process
     const videoDurationSec = totalFramesToRender / fps;
-    const useJpegCapture = Boolean(fastMode) && !isTransparentCapture && !isProResAlpha;
+    const isOpaque = !isTransparentCapture && !isProResAlpha;
+    const useJpegCapture = isOpaque;
+    const jpegQuality = fastMode ? 90 : 95;
+
     if (fastMode) {
-      onLog(`[Engine] Mode Hemat Spek aktif: ${useJpegCapture ? 'JPEG capture + ' : ''}encoder lebih cepat`);
+      onLog(`[Engine] Mode Hemat Spek aktif: JPEG capture + encoder lebih cepat`);
+    } else if (useJpegCapture) {
+      onLog(`[Engine] Fast Pipeline aktif: High-Fidelity JPEG (${jpegQuality}%) capture stream`);
     }
+
     const ffmpegArgs = getFfmpegArgs(preset, fps, outputPath, config.metadata || {}, audioPath, {
       isSeamlessLoop,
       durationSec: videoDurationSec,
-      fastMode: Boolean(fastMode)
+      fastMode: Boolean(fastMode),
+      encoderEngine,
+      hwEncoder: chosenHw,
+      useJpegInput: useJpegCapture
     });
     onLog(`[FFmpeg] Spawning: ${ffmpegPath} ${ffmpegArgs.join(' ')}`);
 
@@ -836,7 +989,7 @@ class RenderEngine {
         // Capture frame buffer (Zero Temp Files) - omitBackground only when transparent alpha requested
         const frameBuffer = await page.screenshot(useJpegCapture ? {
           type: 'jpeg',
-          quality: 92,
+          quality: jpegQuality,
           captureBeyondViewport: false
         } : {
           type: 'png',
@@ -859,6 +1012,22 @@ class RenderEngine {
         const percent = Math.round((renderedCount / totalFramesToRender) * 100);
         const remainingFrames = totalFramesToRender - renderedCount;
         const etaSec = currentFps > 0 ? Math.round(remainingFrames / currentFps) : 0;
+        
+        // Format ETA into hours, minutes, and seconds
+        let etaFormatted = '0s';
+        if (etaSec > 0 && isFinite(etaSec)) {
+          const totalSec = Math.round(etaSec);
+          const h = Math.floor(totalSec / 3600);
+          const m = Math.floor((totalSec % 3600) / 60);
+          const s = totalSec % 60;
+          if (h > 0) {
+            etaFormatted = `${h}h ${m}m ${s < 10 ? '0' : ''}${s}s`;
+          } else if (m > 0) {
+            etaFormatted = `${m}m ${s < 10 ? '0' : ''}${s}s`;
+          } else {
+            etaFormatted = `${s}s`;
+          }
+        }
 
         onProgress({
           currentFrame: renderedCount,
@@ -866,7 +1035,8 @@ class RenderEngine {
           percent,
           renderFps: currentFps.toFixed(1),
           elapsedSec: Math.round(elapsedSec),
-          etaSec
+          etaSec,
+          etaFormatted
         });
       }
 
@@ -930,5 +1100,6 @@ module.exports = {
   RenderEngine,
   resolveFfmpegPath,
   resolveBrowserExecutable,
-  getFfmpegArgs
+  getFfmpegArgs,
+  detectHardwareEncoder
 };

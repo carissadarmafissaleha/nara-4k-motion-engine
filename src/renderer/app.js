@@ -2757,7 +2757,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         bgMode: state.activeBgMode || 'checkerboard',
         enableAudio: chkEnableMatchingAudio ? chkEnableMatchingAudio.checked : true,
         copyAudioToOutput: chkCopyAudioToOutput ? chkCopyAudioToOutput.checked : false,
-        fastMode: (document.getElementById('chkFastMode') || {}).checked || false
+        fastMode: (document.getElementById('chkFastMode') || {}).checked || false,
+        encoderEngine: (document.getElementById('selectEncoderEngine') || {}).value || 'auto'
       }
     };
 
@@ -2768,6 +2769,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnBrowseFiles.disabled = true;
     btnBrowseFolder.disabled = true;
     btnClearQueue.disabled = true;
+    const selectEncoderEngineEl = document.getElementById('selectEncoderEngine');
+    if (selectEncoderEngineEl) selectEncoderEngineEl.disabled = true;
 
     state.queue.forEach(item => {
       item.status = 'pending';
@@ -2857,9 +2860,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const completedContribution = (data.fileIndex || 0) * fileContribution;
     const overallPercent = Math.min(100, Math.round(completedContribution + currentFileContribution));
 
+    let etaDisplay = data.etaFormatted;
+    if (!etaDisplay) {
+      const sec = Math.round(data.etaSec || 0);
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      if (h > 0) etaDisplay = `${h}h ${m}m ${s < 10 ? '0' : ''}${s}s`;
+      else if (m > 0) etaDisplay = `${m}m ${s < 10 ? '0' : ''}${s}s`;
+      else etaDisplay = `${s}s`;
+    }
+
     batchProgressBar.style.width = `${overallPercent}%`;
     batchPercentText.textContent = `${overallPercent}%`;
-    batchProgressText.textContent = `[${data.filename}] Frame ${data.currentFrame}/${data.totalFrames} (${data.renderFps} fps | ETA: ${data.etaSec}s)`;
+    batchProgressText.textContent = `[${data.filename}] Frame ${data.currentFrame}/${data.totalFrames} (${data.renderFps} fps | ETA: ${etaDisplay})`;
 
     updateQueueDisplay();
   });
@@ -4088,6 +4102,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnBrowseFiles.disabled = false;
     btnBrowseFolder.disabled = false;
     btnClearQueue.disabled = false;
+    const selectEncoderEngineEl = document.getElementById('selectEncoderEngine');
+    if (selectEncoderEngineEl) selectEncoderEngineEl.disabled = false;
     updateQueueDisplay();
   }
 
