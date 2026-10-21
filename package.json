@@ -5,6 +5,7 @@
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
+    "start:detached": "powershell -Command \"Start-Process .\\node_modules\\.bin\\electron.cmd -ArgumentList '.'\"",
     "build:portable": "electron-builder --win portable",
     "test": "echo \"Ready to start\""
   },

@@ -532,6 +532,12 @@ motionjs/
    - **Tetap aman dan tidak akan crash.** NARA menerapkan sistem *graceful auto-fallback*. Jika kartu grafis AMD, NVIDIA, atau Intel tidak terdeteksi, engine secara otomatis beralih ke mode CPU murni (`libx264`). Selain itu, tersedia opsi **Mode Hemat Spek** di antarmuka untuk mengurangi beban kompresi pada prosesor spesifikasi rendah.
 5. **Bagaimana cara memilih antara GPU vs CPU saat merender?**
    - Tepat di sebelah kiri tombol **Start Batch Render**, klik menu dropdown: pilih `⚡ Auto (GPU)` untuk deteksi otomatis cerdas, `🚀 GPU (AMD/NV)` untuk memaksa akselerasi hardware, atau `💻 CPU (Normal)` untuk komputasi murni prosesor.
+6. **Mengapa jika aplikasi sudah di-tray, lalu terminal ditutup aplikasinya ikut tertutup?**
+   - Saat menjalankan lewat perintah development `npm start`, aplikasi Electron berjalan sebagai **anak proses (*child process*)** yang terikat langsung pada sesi jendela terminal (PowerShell / Command Prompt). Di sistem operasi Windows, menutup jendela terminal induk otomatis mematikan seluruh proses anak di dalamnya (*process tree termination*).
+   - **Solusi agar aplikasi bebas berjalan di background tanpa terminal:**
+     - **Gunakan File EXE Portabel**: Jalankan `npm run build:portable` untuk membuat `dist/NARA-Portable-1.0.0.exe`. File EXE ini berjalan sebagai aplikasi Windows murni tanpa jendela terminal sama sekali.
+     - **Gunakan `start.bat`**: Cukup *double-click* berkas `start.bat` di folder proyek. Jendela terminal akan langsung tertutup otomatis seketika dan NARA berjalan mandiri.
+     - **Gunakan Perintah Detached**: Jalankan `npm run start:detached` dari terminal.
 
 ---
 
